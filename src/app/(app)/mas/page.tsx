@@ -9,7 +9,7 @@ export const metadata: Metadata = { title: "Más" };
 const OPCIONES: { href: string; texto: string; detalle: string; icono: NombreIcono }[] = [
   { href: "/precios", texto: "Lista de precios", detalle: "Tus servicios y materiales, y cómo actualizarlos", icono: "precios" },
   { href: "/negocio", texto: "Mi negocio", detalle: "Tus datos, tu alias para cobrar y tu CUIT", icono: "negocio" },
-  { href: "/ayuda", texto: "Ayuda", detalle: "Cómo usar Oficio, paso a paso", icono: "ayuda" },
+  { href: "/ayuda", texto: "Ayuda", detalle: "Cómo usar Laburo, paso a paso", icono: "ayuda" },
 ];
 
 export default function Mas() {

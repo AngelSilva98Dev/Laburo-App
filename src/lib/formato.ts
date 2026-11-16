@@ -1,6 +1,6 @@
 /** Formatos pensados para Argentina: pesos, fechas dd/mm, WhatsApp. */
 
-export const MARCA = "Oficio";
+export const MARCA = "Laburo";
 export const ZONA = "America/Argentina/Buenos_Aires";
 
 /** Fecha de hoy en Argentina, como AAAA-MM-DD. */

@@ -5,11 +5,11 @@ import "./globals.css";
 const geist = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: { default: "Oficio — Presupuestos, agenda y cobros para tu trabajo", template: "%s · Oficio" },
+  title: { default: "Laburo — Presupuestos, agenda y cobros para tu trabajo", template: "%s · Laburo" },
   description:
     "La forma más simple de organizar tu trabajo: presupuestos por WhatsApp, agenda de trabajos y cobros. Hecho para oficios y servicios de Argentina.",
-  applicationName: "Oficio",
-  appleWebApp: { capable: true, title: "Oficio", statusBarStyle: "default" },
+  applicationName: "Laburo",
+  appleWebApp: { capable: true, title: "Laburo", statusBarStyle: "default" },
   formatDetection: { telephone: false },
 };
 

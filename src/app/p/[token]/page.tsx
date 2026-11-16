@@ -156,7 +156,7 @@ export default async function DocumentoPublico({ params }: { params: Promise<{ t
         )}
       </div>
 
-      <p className="no-imprimir mt-8 text-center text-sm text-suave">Hecho con Oficio</p>
+      <p className="no-imprimir mt-8 text-center text-sm text-suave">Hecho con Laburo</p>
     </main>
   );
 }

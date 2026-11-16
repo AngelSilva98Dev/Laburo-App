@@ -45,7 +45,7 @@ export default function Portada() {
               Presupuestá, agendá y cobrá tus trabajos desde el celular.
             </h1>
             <p className="mt-4 text-xl text-suave">
-              Oficio ordena tu trabajo de todos los días. Sin planillas, sin papelitos y sin complicarte.
+              Laburo ordena tu trabajo de todos los días. Sin planillas, sin papelitos y sin complicarte.
             </p>
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
               <Link href="/registrarse" className="btn btn-primario text-lg">Crear mi cuenta gratis</Link>
@@ -98,7 +98,7 @@ export default function Portada() {
       </main>
 
       <footer className="border-t border-slate-200 px-5 py-8 text-center text-suave">
-        Oficio · Hecho en Argentina
+        Laburo · Hecho en Argentina
       </footer>
     </div>
   );

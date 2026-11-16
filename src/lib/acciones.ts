@@ -82,7 +82,7 @@ export async function entrarDemo() {
     },
     {
       sql: "INSERT INTO usuarios (id, negocio_id, email, nombre, clave) VALUES (?, ?, ?, 'Martín', ?)",
-      args: [usuarioId, negocioId, `demo-${usuarioId}@ejemplo.oficio`, cifrarClave(randomBytes(16).toString("hex"))],
+      args: [usuarioId, negocioId, `demo-${usuarioId}@ejemplo.laburo`, cifrarClave(randomBytes(16).toString("hex"))],
     },
   ]);
   await cargarDatosDeEjemplo(negocioId);

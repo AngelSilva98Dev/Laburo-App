@@ -1,10 +1,10 @@
 import type { MetadataRoute } from "next";
 
-/** Permite "Agregar a la pantalla de inicio" y usar Oficio como una app. */
+/** Permite "Agregar a la pantalla de inicio" y usar Laburo como una app. */
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "Oficio — Presupuestos, agenda y cobros",
-    short_name: "Oficio",
+    name: "Laburo — Presupuestos, agenda y cobros",
+    short_name: "Laburo",
     description: "Organizá tu trabajo: presupuestos por WhatsApp, agenda y cobros.",
     lang: "es-AR",
     start_url: "/inicio",

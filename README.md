@@ -1,4 +1,4 @@
-# Oficio
+# Laburo
 
 Plataforma de gestión para oficios y servicios a domicilio en Argentina (plomeros, electricistas, gasistas, jardineros, técnicos, fletes, limpieza…). El equivalente local a Jobber: **presupuestar, agendar y cobrar desde el celular**.
 
@@ -45,7 +45,7 @@ npm install
 npm run dev
 ```
 
-Abrí <http://localhost:3000> y tocá **"Probar con datos de ejemplo"**. En tu computadora los datos se guardan solos en `data/oficio.db` (SQLite), sin configurar nada.
+Abrí <http://localhost:3000> y tocá **"Probar con datos de ejemplo"**. En tu computadora los datos se guardan solos en `data/laburo.db` (SQLite), sin configurar nada.
 
 ## Cómo publicarlo
 

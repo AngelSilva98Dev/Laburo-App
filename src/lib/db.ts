@@ -4,7 +4,7 @@ import { randomUUID } from "node:crypto";
 
 /**
  * Base de datos.
- * - En tu computadora: un archivo local (data/oficio.db), sin instalar nada.
+ * - En tu computadora: un archivo local (data/laburo.db), sin instalar nada.
  * - En producción: Turso (SQLite en la nube). Se activa con TURSO_DATABASE_URL y TURSO_AUTH_TOKEN.
  */
 
@@ -121,7 +121,7 @@ function cliente(): Client {
       g.__db = createClient({ url, authToken: process.env.TURSO_AUTH_TOKEN });
     } else {
       fs.mkdirSync("data", { recursive: true });
-      g.__db = createClient({ url: "file:data/oficio.db" });
+      g.__db = createClient({ url: "file:data/laburo.db" });
     }
   }
   return g.__db;

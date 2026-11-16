@@ -5,7 +5,7 @@ export function Logo({ className = "" }: { className?: string }) {
         <rect width="32" height="32" rx="9" fill="#1b54d6" />
         <path d="m9 16.5 5 5 9.5-11" fill="none" stroke="#fff" strokeWidth="3.4" strokeLinecap="round" strokeLinejoin="round" />
       </svg>
-      Oficio
+      Laburo
     </span>
   );
 }

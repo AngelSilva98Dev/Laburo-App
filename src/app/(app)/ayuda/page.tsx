@@ -34,7 +34,7 @@ const PASOS: { titulo: string; texto: string; href: string; boton: string }[] = 
 const PREGUNTAS: [string, string][] = [
   [
     "¿Esto reemplaza la factura?",
-    "No. Los presupuestos y cobros de Oficio son comprobantes internos, no son facturas. Si tenés que facturar, seguí haciéndolo como siempre (por ejemplo, desde la web o la app de ARCA).",
+    "No. Los presupuestos y cobros de Laburo son comprobantes internos, no son facturas. Si tenés que facturar, seguí haciéndolo como siempre (por ejemplo, desde la web o la app de ARCA).",
   ],
   [
     "¿Mi cliente necesita bajar algo?",
@@ -54,7 +54,7 @@ const PREGUNTAS: [string, string][] = [
 export default function Ayuda() {
   return (
     <>
-      <Encabezado titulo="Ayuda" bajada="Oficio en 4 pasos." />
+      <Encabezado titulo="Ayuda" bajada="Laburo en 4 pasos." />
       <ol className="space-y-3">
         {PASOS.map((p, i) => (
           <li key={p.titulo} className="tarjeta flex gap-4">
