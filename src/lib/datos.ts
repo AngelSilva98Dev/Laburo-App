@@ -14,6 +14,11 @@ export type Negocio = {
   link_pago: string;
   validez_dias: number;
   nota_pie: string;
+  /** Fecha de alta, en UTC: "AAAA-MM-DD HH:MM:SS". De acá sale la prueba gratis. */
+  creado: string;
+  /** "" (nunca se suscribió), pendiente, activa, pausada o cancelada. */
+  suscripcion_estado: string;
+  suscripcion_id: string;
 };
 
 export type Cliente = {

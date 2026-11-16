@@ -19,6 +19,9 @@ export default function Ingresar() {
         <div>
           <label htmlFor="clave" className="etiqueta">Contraseña</label>
           <input id="clave" name="clave" type="password" autoComplete="current-password" required className="campo" />
+          <Link href="/recuperar" className="mt-1 inline-flex min-h-11 items-center font-semibold text-marca-700 underline underline-offset-2">
+            Olvidé mi contraseña
+          </Link>
         </div>
       </Formulario>
 

@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { guardarTrabajo } from "@/lib/acciones";
-import { requerirSesion } from "@/lib/auth";
+import { requerirAcceso } from "@/lib/auth";
 import { listarClientes, obtenerDoc, obtenerTrabajo, type Trabajo } from "@/lib/datos";
 import { esFechaISO, estadoTrabajo, fechaAmigable, hoyISO } from "@/lib/formato";
 import { Formulario, SelectorCliente } from "./formulario";
@@ -40,7 +40,7 @@ export async function FormularioTrabajo({
   id?: string;
   desde?: { cliente?: string; presupuesto?: string; dia?: string };
 }) {
-  const { negocio } = await requerirSesion();
+  const { negocio } = await requerirAcceso();
   const hoy = hoyISO();
   const clientes = await listarClientes(negocio.id);
 

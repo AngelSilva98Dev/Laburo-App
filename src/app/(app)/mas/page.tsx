@@ -9,6 +9,7 @@ export const metadata: Metadata = { title: "Más" };
 const OPCIONES: { href: string; texto: string; detalle: string; icono: NombreIcono }[] = [
   { href: "/precios", texto: "Lista de precios", detalle: "Tus servicios y materiales, y cómo actualizarlos", icono: "precios" },
   { href: "/negocio", texto: "Mi negocio", detalle: "Tus datos, tu alias para cobrar y tu CUIT", icono: "negocio" },
+  { href: "/suscripcion", texto: "Suscripción", detalle: "Tu prueba gratis, tu plan y cómo darte de baja", icono: "cobro" },
   { href: "/ayuda", texto: "Ayuda", detalle: "Cómo usar Laburo, paso a paso", icono: "ayuda" },
 ];
 

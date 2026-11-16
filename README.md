@@ -13,7 +13,9 @@ Plataforma de gestión para oficios y servicios a domicilio en Argentina (plomer
 | **Cobros** | Señas y pagos parciales, medios de pago locales (efectivo, transferencia, Mercado Pago, tarjeta), saldo y "quién me debe". El cliente ve el alias/CVU con botón de copiar y un link de pago opcional. |
 | **Lista de precios** | Catálogo de servicios y materiales, y **aumento masivo por porcentaje** con redondeo (pensado para la inflación). |
 | **Clientes** | Ficha con historial, deuda y contacto rápido. Se pueden cargar en el momento, dentro del presupuesto. |
-| **Cuentas** | Registro con email y contraseña, sesiones seguras, cada negocio ve solo sus datos. Cuenta de prueba con datos de ejemplo. |
+| **Cuentas** | Registro con email y contraseña, recuperación de contraseña por email, límite de intentos de ingreso, cada negocio ve solo sus datos. Cuenta de prueba con datos de ejemplo. |
+| **Suscripción** | Prueba gratis, suscripción mensual con Mercado Pago, bloqueo de carga al vencer y botón de baja. |
+| **Legales** | Términos y condiciones y Política de privacidad (Ley 25.326), en borrador para revisión de un abogado. |
 
 El circuito completo es: **presupuesto → el cliente acepta → trabajo agendado → trabajo terminado → cobro → pago**. Cada pantalla ofrece el paso siguiente.
 
@@ -47,13 +49,28 @@ npm run dev
 
 Abrí <http://localhost:3000> y tocá **"Probar con datos de ejemplo"**. En tu computadora los datos se guardan solos en `data/laburo.db` (SQLite), sin configurar nada.
 
-## Cómo publicarlo
+## Cómo publicarlo y empezar a cobrar
 
-1. Creá una base en [Turso](https://turso.tech) (SQLite en la nube, tiene plan gratuito).
-2. Subí el proyecto a [Vercel](https://vercel.com) u otro hosting de Node.
-3. Configurá las variables de `.env.example`: `TURSO_DATABASE_URL` y `TURSO_AUTH_TOKEN`.
+El código ya incluye prueba gratis, suscripción mensual, recuperación de contraseña y textos legales. Para ponerlo en marcha hacen falta cuentas en cuatro servicios y cargar sus claves como variables de entorno (la lista completa está en `.env.example`).
 
-Las tablas se crean solas la primera vez.
+1. **Base de datos — [Turso](https://turso.tech).** Creá una base y copiá su URL y un token → `TURSO_DATABASE_URL`, `TURSO_AUTH_TOKEN`. Las tablas se crean solas.
+2. **Hosting — [Vercel](https://vercel.com).** "Add New → Project", elegí este repositorio de GitHub y cargá las variables de entorno. Después conectá tu dominio y poné esa dirección en `URL_PUBLICA`.
+3. **Emails — [Resend](https://resend.com).** Verificá tu dominio y creá una API key → `RESEND_API_KEY`, `EMAIL_REMITENTE`. Sin esto, "Olvidé mi contraseña" no envía nada.
+4. **Cobro — [Mercado Pago Developers](https://www.mercadopago.com.ar/developers).** Creá una aplicación con el producto Suscripciones y copiá el Access Token de producción → `MP_ACCESS_TOKEN`. En "Webhooks" apuntá a `https://TU-DOMINIO/api/mercadopago`, activá el evento de suscripciones y copiá la clave secreta → `MP_WEBHOOK_SECRET`.
+5. **Precio y prueba.** `PRECIO_MENSUAL` (en pesos) y `DIAS_PRUEBA`.
+6. **Textos legales.** Completá `LEGAL_TITULAR`, `LEGAL_CUIT`, `LEGAL_DOMICILIO` y `EMAIL_CONTACTO`. Los textos de `/terminos` y `/privacidad` son un borrador: hacelos revisar por un abogado antes de publicar.
+
+### Cómo funciona el cobro
+
+- Cada cuenta nueva tiene `DIAS_PRUEBA` días gratis, sin cargar tarjeta.
+- Al terminar la prueba, la cuenta puede seguir **viendo** todo, pero para **cargar** cosas nuevas tiene que suscribirse desde "Suscripción". Nunca se le esconden sus datos.
+- La suscripción es un débito mensual de Mercado Pago. Cuando Mercado Pago avisa que se autorizó, se pausó o se canceló, la cuenta se actualiza sola.
+- El usuario puede darse de baja con un botón desde "Suscripción" (botón de baja y de arrepentimiento).
+- **Mientras `MP_ACCESS_TOKEN` esté vacío no se cobra y nadie se bloquea.** Sirve para lanzar gratis y activar el cobro más adelante.
+
+### Antes de cobrarle a alguien de verdad
+
+La integración con Mercado Pago está escrita según su documentación, pero **no se pudo probar contra Mercado Pago real** porque requiere tus credenciales. Antes de abrirlo al público, hacé una suscripción de prueba con las credenciales de prueba de Mercado Pago y verificá: que el link de pago abre, que al volver la cuenta queda "activa", que el webhook llega y que la baja funciona.
 
 ## Tecnología
 
@@ -71,11 +88,10 @@ src/app/p/       página pública que ve el cliente
 Ordenado por impacto:
 
 1. **Factura electrónica ARCA (ex AFIP)** con CAE (Factura C para monotributo, A/B para RI). Hoy los documentos son comprobantes internos.
-2. **Cobro online integrado con Mercado Pago** (Checkout Pro + webhooks) para que el pago se registre solo. Hoy se usa alias y un link de pago fijo.
+2. **Cobro online a los clientes finales con Mercado Pago** (Checkout Pro + webhooks) para que el pago del trabajo se registre solo. Hoy se usa alias y un link de pago fijo.
 3. **Recordatorios automáticos por WhatsApp** (API de WhatsApp Business) y pedido de reseña en Google al terminar.
 4. **Equipo**: varios usuarios por negocio, asignación de trabajos y permisos.
 5. **Fotos del trabajo** (antes/después) y firma del cliente.
 6. **Funcionamiento sin conexión** para sótanos y zonas sin señal.
-7. **Recuperar contraseña por email** y límite de intentos de ingreso.
-8. Trabajos recurrentes (abonos de mantenimiento), reportes de ingresos y exportación para el contador.
-9. Planes y cobro de la suscripción.
+7. Trabajos recurrentes (abonos de mantenimiento), reportes de ingresos y exportación para el contador.
+8. Emails de aviso antes de que termine la prueba, facturación automática de la suscripción y borrado de cuenta desde la aplicación.

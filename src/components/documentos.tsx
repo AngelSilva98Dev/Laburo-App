@@ -9,7 +9,7 @@ import {
   marcarEnviado,
   registrarPago,
 } from "@/lib/acciones";
-import { requerirSesion } from "@/lib/auth";
+import { requerirAcceso, requerirSesion } from "@/lib/auth";
 import {
   cobroExistente,
   lineasDe,
@@ -144,7 +144,7 @@ export async function FormularioDoc({
   /** Para arrancar con datos ya cargados: desde un cliente, un presupuesto o un trabajo. */
   desde?: { cliente?: string; presupuesto?: string; trabajo?: string };
 }) {
-  const { negocio } = await requerirSesion();
+  const { negocio } = await requerirAcceso();
   const tx = TEXTOS[tipo];
   const hoy = hoyISO();
   const [clientes, precios] = await Promise.all([listarClientes(negocio.id), listarPrecios(negocio.id)]);

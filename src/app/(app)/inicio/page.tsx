@@ -5,6 +5,7 @@ import { Icono, TituloSeccion, type NombreIcono } from "@/components/ui";
 import { requerirSesion } from "@/lib/auth";
 import { resumen, trabajosEntre } from "@/lib/datos";
 import { dinero, fechaLarga, hoyISO, sumarDias } from "@/lib/formato";
+import { acceso } from "@/lib/suscripcion";
 
 export const metadata: Metadata = { title: "Inicio" };
 
@@ -24,6 +25,7 @@ export default async function Inicio() {
   const pesos = r.porCobrar.find((p) => p.moneda === "ARS");
   const dolares = r.porCobrar.find((p) => p.moneda === "USD");
   const faltaConfigurar = !negocio.telefono || !negocio.alias;
+  const plan = acceso(negocio);
 
   return (
     <>
@@ -31,6 +33,27 @@ export default async function Inicio() {
         <p className="text-suave first-letter:uppercase">{fechaLarga(hoy)}</p>
         <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">Hola, {usuario.nombre.split(" ")[0]}</h1>
       </header>
+
+      {plan.estado === "vencida" && (
+        <Link href="/suscripcion" className="mb-4 flex items-center gap-3 rounded-2xl border-2 border-red-200 bg-red-50 p-4 text-red-900">
+          <span className="flex-1">
+            <strong className="block">Tu prueba gratis terminó</strong>
+            <span className="text-sm">Podés ver todo lo que cargaste. Para seguir cargando, activá tu suscripción.</span>
+          </span>
+          <Icono n="derecha" className="size-5" />
+        </Link>
+      )}
+      {plan.estado === "prueba" && plan.diasPrueba <= 5 && (
+        <Link href="/suscripcion" className="mb-4 flex items-center gap-3 rounded-2xl border-2 border-amber-200 bg-amber-50 p-4 text-amber-950">
+          <span className="flex-1">
+            <strong className="block">
+              {plan.diasPrueba === 1 ? "Te queda 1 día de prueba gratis" : `Te quedan ${plan.diasPrueba} días de prueba gratis`}
+            </strong>
+            <span className="text-sm">Activá tu suscripción para no perder el ritmo.</span>
+          </span>
+          <Icono n="derecha" className="size-5" />
+        </Link>
+      )}
 
       {/* Lo más importante primero: la plata y lo que espera respuesta. */}
       <div className="grid grid-cols-2 gap-3">

@@ -1,10 +1,12 @@
 "use server";
 
-import { randomBytes } from "node:crypto";
+import { createHash, randomBytes } from "node:crypto";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import type { InStatement } from "@libsql/client";
-import { cerrarSesion, cifrarClave, claveCorrecta, crearSesion, requerirSesion } from "./auth";
+import { cerrarSesion, cifrarClave, claveCorrecta, crearSesion, requerirAcceso, requerirSesion } from "./auth";
+import { enviarEmail } from "./email";
+import { cancelarSuscripcionMP, cobroActivo, crearSuscripcionMP, urlBase } from "./suscripcion";
 import { ejecutar, fila, lote, nuevoId } from "./db";
 import { cargarDatosDeEjemplo } from "./demo";
 import { calcularTotales, esFechaISO, hoyISO, MEDIOS_PAGO, CONDICIONES_IVA } from "./formato";
@@ -59,8 +61,20 @@ export async function registrarse(fd: FormData): Promise<Resultado> {
 export async function ingresar(fd: FormData): Promise<Resultado> {
   const email = texto(fd, "email", 120).toLowerCase();
   const clave = String(fd.get("clave") ?? "");
+  // Freno contra quien prueba contraseñas: 8 errores en 15 minutos por email.
+  const fallos = await fila<{ n: number }>(
+    "SELECT COUNT(*) AS n FROM intentos_ingreso WHERE email = ? AND momento > datetime('now', '-15 minutes')",
+    [email],
+  );
+  if ((fallos?.n ?? 0) >= 8)
+    return { error: "Probaste muchas veces seguidas. Esperá 15 minutos o tocá “Olvidé mi contraseña”." };
+
   const u = await fila<{ id: string; clave: string }>("SELECT id, clave FROM usuarios WHERE email = ?", [email]);
-  if (!u || !claveCorrecta(clave, u.clave)) return { error: "El email o la contraseña no coinciden. Probá de nuevo." };
+  if (!u || !claveCorrecta(clave, u.clave)) {
+    await ejecutar("INSERT INTO intentos_ingreso (email) VALUES (?)", [email]);
+    return { error: "El email o la contraseña no coinciden. Probá de nuevo." };
+  }
+  await ejecutar("DELETE FROM intentos_ingreso WHERE email = ? OR momento < datetime('now', '-1 day')", [email]);
   await crearSesion(u.id);
   redirect("/inicio");
 }
@@ -88,6 +102,87 @@ export async function entrarDemo() {
   await cargarDatosDeEjemplo(negocioId);
   await crearSesion(usuarioId);
   redirect("/inicio");
+}
+
+/* ───────────── Recuperar contraseña ───────────── */
+
+const huella = (token: string) => createHash("sha256").update(token).digest("hex");
+
+export async function pedirRecuperacion(fd: FormData): Promise<Resultado> {
+  const email = texto(fd, "email", 120).toLowerCase();
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return { error: "Revisá el email: parece que le falta algo." };
+
+  const u = await fila<{ id: string; nombre: string }>("SELECT id, nombre FROM usuarios WHERE email = ?", [email]);
+  if (u) {
+    const token = randomBytes(32).toString("hex");
+    await lote([
+      { sql: "DELETE FROM recuperaciones WHERE usuario_id = ? OR expira < datetime('now')", args: [u.id] },
+      {
+        sql: "INSERT INTO recuperaciones (token_hash, usuario_id, expira) VALUES (?, ?, datetime('now', '+1 hour'))",
+        args: [huella(token), u.id],
+      },
+    ]);
+    await enviarEmail({
+      para: email,
+      asunto: "Cambiá tu contraseña de Laburo",
+      texto: `Hola ${u.nombre}:\n\nPara elegir una contraseña nueva, entrá a este link (vale por 1 hora):\n\n${await urlBase()}/restablecer/${token}\n\nSi no lo pediste vos, no hagas nada: tu contraseña sigue igual.\n\nLaburo`,
+    });
+  }
+  // Siempre el mismo mensaje, exista o no la cuenta, para no revelar quién está registrado.
+  return { ok: "Listo. Si ese email tiene una cuenta, en unos minutos te llega un mensaje con el link para cambiar la contraseña. Revisá también el correo no deseado." };
+}
+
+export async function restablecerClave(fd: FormData): Promise<Resultado> {
+  const token = texto(fd, "token", 64);
+  const clave = String(fd.get("clave") ?? "");
+  if (clave.length < 8) return { error: "La contraseña tiene que tener al menos 8 letras o números." };
+
+  const r = await fila<{ usuario_id: string }>(
+    "SELECT usuario_id FROM recuperaciones WHERE token_hash = ? AND expira > datetime('now')",
+    [huella(token)],
+  );
+  if (!r) return { error: "Este link ya venció o ya se usó. Pedí uno nuevo desde “Olvidé mi contraseña”." };
+
+  const email = await fila<{ email: string }>("SELECT email FROM usuarios WHERE id = ?", [r.usuario_id]);
+  await lote([
+    { sql: "UPDATE usuarios SET clave = ? WHERE id = ?", args: [cifrarClave(clave), r.usuario_id] },
+    { sql: "DELETE FROM recuperaciones WHERE usuario_id = ?", args: [r.usuario_id] },
+    // Cierra las sesiones abiertas en otros dispositivos.
+    { sql: "DELETE FROM sesiones WHERE usuario_id = ?", args: [r.usuario_id] },
+    { sql: "DELETE FROM intentos_ingreso WHERE email = ?", args: [email?.email ?? ""] },
+  ]);
+  await crearSesion(r.usuario_id);
+  redirect("/inicio");
+}
+
+/* ───────────── Suscripción ───────────── */
+
+export async function suscribirse(fd: FormData): Promise<Resultado> {
+  const { negocio } = await requerirSesion();
+  if (!cobroActivo()) return { error: "El cobro de la suscripción todavía no está habilitado." };
+  const email = texto(fd, "email_mp", 120).toLowerCase();
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return { error: "Escribí el email de tu cuenta de Mercado Pago." };
+
+  let link: string | null = null;
+  try {
+    link = await crearSuscripcionMP(negocio, email);
+  } catch {
+    return { error: "No pudimos conectar con Mercado Pago. Probá de nuevo en unos minutos." };
+  }
+  if (!link) return { error: "Mercado Pago no nos dio el link de pago. Probá de nuevo en unos minutos." };
+  actualizar();
+  redirect(link);
+}
+
+export async function cancelarSuscripcion(): Promise<void> {
+  const { negocio } = await requerirSesion();
+  try {
+    await cancelarSuscripcionMP(negocio);
+  } catch {
+    redirect("/suscripcion?error=cancelar");
+  }
+  actualizar();
+  redirect("/suscripcion?cancelada=1");
 }
 
 /* ───────────── Mi negocio ───────────── */
@@ -135,7 +230,7 @@ function datosCliente(fd: FormData, prefijo = "") {
 }
 
 export async function guardarCliente(fd: FormData): Promise<Resultado> {
-  const { negocio } = await requerirSesion();
+  const { negocio } = await requerirAcceso();
   const id = texto(fd, "id");
   const d = datosCliente(fd);
   if (!d[0]) return { error: "Escribí el nombre del cliente." };
@@ -193,7 +288,7 @@ async function resolverCliente(negocioId: string, fd: FormData): Promise<{ id?: 
 /* ───────────── Lista de precios ───────────── */
 
 export async function guardarPrecio(fd: FormData): Promise<Resultado> {
-  const { negocio } = await requerirSesion();
+  const { negocio } = await requerirAcceso();
   const id = texto(fd, "id");
   const nombre = texto(fd, "nombre", 120);
   const precio = numero(fd.get("precio"));
@@ -216,7 +311,7 @@ export async function borrarPrecio(fd: FormData) {
 
 /** Sube (o baja) todos los precios de la lista un porcentaje. Pensado para la inflación. */
 export async function ajustarPrecios(fd: FormData): Promise<Resultado> {
-  const { negocio } = await requerirSesion();
+  const { negocio } = await requerirAcceso();
   const pct = numero(fd.get("porcentaje"));
   if (!pct || pct <= -90 || pct > 500) return { error: "Escribí un porcentaje válido, por ejemplo 10." };
   const redondeo = [1, 10, 100, 1000].includes(numero(fd.get("redondeo"))) ? numero(fd.get("redondeo")) : 100;
@@ -233,7 +328,7 @@ export async function ajustarPrecios(fd: FormData): Promise<Resultado> {
 const RUTA = { presupuesto: "/presupuestos", cobro: "/cobros" } as const;
 
 export async function guardarDoc(fd: FormData): Promise<Resultado> {
-  const { negocio } = await requerirSesion();
+  const { negocio } = await requerirAcceso();
   const tipo = texto(fd, "tipo") === "cobro" ? "cobro" : "presupuesto";
   const id = texto(fd, "id");
   const titulo = texto(fd, "titulo", 140);
@@ -356,7 +451,7 @@ export async function responderPresupuesto(fd: FormData) {
 /* ───────────── Pagos ───────────── */
 
 export async function registrarPago(fd: FormData): Promise<Resultado> {
-  const { negocio } = await requerirSesion();
+  const { negocio } = await requerirAcceso();
   const docId = texto(fd, "doc_id");
   const monto = numero(fd.get("monto"));
   const medio = texto(fd, "medio");
@@ -385,7 +480,7 @@ export async function borrarPago(fd: FormData) {
 /* ───────────── Trabajos ───────────── */
 
 export async function guardarTrabajo(fd: FormData): Promise<Resultado> {
-  const { negocio } = await requerirSesion();
+  const { negocio } = await requerirAcceso();
   const id = texto(fd, "id");
   const titulo = texto(fd, "titulo", 140);
   if (!titulo) return { error: "Contá en pocas palabras qué trabajo es." };

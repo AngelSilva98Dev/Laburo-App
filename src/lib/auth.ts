@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { randomBytes, scryptSync, timingSafeEqual } from "node:crypto";
 import { ejecutar, fila } from "./db";
 import type { Negocio } from "./datos";
+import { acceso } from "./suscripcion";
 
 const COOKIE = "sesion";
 const DIAS = 60;
@@ -74,4 +75,27 @@ export async function requerirSesion(): Promise<Sesion> {
   const s = await sesionActual();
   if (!s) redirect("/ingresar");
   return s;
+}
+
+/**
+ * Para cargar o cambiar datos: además de la sesión, pide prueba vigente o suscripción al día.
+ * Con la cuenta vencida se puede seguir mirando todo, pero para cargar hay que suscribirse.
+ */
+export async function requerirAcceso(): Promise<Sesion> {
+  const s = await requerirSesion();
+  if (!acceso(s.negocio).puedeEscribir) redirect("/suscripcion");
+  return s;
+}
+
+/** Vuelve a leer la sesión desde la base (para cuando algo cambió durante el mismo pedido). */
+export async function sesionFresca(): Promise<Sesion> {
+  const token = (await cookies()).get(COOKIE)?.value ?? "";
+  const u = await fila<{ id: string; nombre: string; email: string; negocio_id: string }>(
+    `SELECT u.id, u.nombre, u.email, u.negocio_id
+     FROM sesiones s JOIN usuarios u ON u.id = s.usuario_id WHERE s.token = ?`,
+    [token],
+  );
+  const negocio = u ? await fila<Negocio>("SELECT * FROM negocios WHERE id = ?", [u.negocio_id]) : null;
+  if (!u || !negocio) redirect("/ingresar");
+  return { usuario: { id: u.id, nombre: u.nombre, email: u.email }, negocio };
 }

@@ -112,7 +112,33 @@ CREATE TABLE IF NOT EXISTS pagos (
   creado TEXT DEFAULT (datetime('now'))
 );
 CREATE INDEX IF NOT EXISTS idx_pagos_doc ON pagos(doc_id);
+CREATE TABLE IF NOT EXISTS recuperaciones (
+  token_hash TEXT PRIMARY KEY,
+  usuario_id TEXT NOT NULL REFERENCES usuarios(id),
+  expira TEXT NOT NULL
+);
+CREATE TABLE IF NOT EXISTS intentos_ingreso (
+  email TEXT NOT NULL,
+  momento TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_intentos_email ON intentos_ingreso(email, momento);
 `;
+
+/** Columnas que se agregaron después de la primera versión. Se suman solas si faltan. */
+const COLUMNAS_NUEVAS: [tabla: string, columna: string, definicion: string][] = [
+  ["negocios", "suscripcion_estado", "TEXT DEFAULT ''"],
+  ["negocios", "suscripcion_id", "TEXT DEFAULT ''"],
+];
+
+async function preparar(c: Client) {
+  await c.executeMultiple(ESQUEMA);
+  for (const [tabla, columna, definicion] of COLUMNAS_NUEVAS) {
+    const info = await c.execute(`PRAGMA table_info(${tabla})`);
+    if (!info.rows.some((r) => r[1] === columna)) {
+      await c.execute(`ALTER TABLE ${tabla} ADD COLUMN ${columna} ${definicion}`);
+    }
+  }
+}
 
 function cliente(): Client {
   if (!g.__db) {
@@ -130,7 +156,7 @@ function cliente(): Client {
 async function db(): Promise<Client> {
   const c = cliente();
   if (!g.__dbLista) {
-    g.__dbLista = c.executeMultiple(ESQUEMA).catch((e) => {
+    g.__dbLista = preparar(c).catch((e) => {
       g.__dbLista = undefined;
       throw e;
     });

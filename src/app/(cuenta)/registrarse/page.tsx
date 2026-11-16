@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Formulario } from "@/components/formulario";
 import { registrarse } from "@/lib/acciones";
+import { DIAS_PRUEBA } from "@/lib/suscripcion";
 
 export const metadata: Metadata = { title: "Crear cuenta" };
 
@@ -9,7 +10,7 @@ export default function Registrarse() {
   return (
     <main>
       <h1 className="text-3xl font-bold tracking-tight">Creá tu cuenta</h1>
-      <p className="mt-2 mb-6 text-suave">Son 4 datos y ya podés empezar. Es gratis.</p>
+      <p className="mt-2 mb-6 text-suave">Son 4 datos y ya podés empezar. Tenés {DIAS_PRUEBA} días gratis, sin poner tarjeta.</p>
 
       <Formulario accion={registrarse} boton="Crear mi cuenta">
         <div>
@@ -30,6 +31,12 @@ export default function Registrarse() {
           <input id="clave" name="clave" type="password" autoComplete="new-password" required minLength={8} className="campo" />
           <p className="ayuda">Al menos 8 letras o números.</p>
         </div>
+        <p className="text-sm text-suave">
+          Al crear tu cuenta aceptás los{" "}
+          <Link href="/terminos" target="_blank" className="font-semibold text-marca-700 underline underline-offset-2">Términos y condiciones</Link>{" "}
+          y la{" "}
+          <Link href="/privacidad" target="_blank" className="font-semibold text-marca-700 underline underline-offset-2">Política de privacidad</Link>.
+        </p>
       </Formulario>
 
       <p className="mt-8 text-center">

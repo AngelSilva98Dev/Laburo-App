@@ -3,6 +3,7 @@ import { BotonAccion } from "@/components/formulario";
 import { Logo } from "@/components/logo";
 import { Icono, type NombreIcono } from "@/components/ui";
 import { entrarDemo } from "@/lib/acciones";
+import { DIAS_PRUEBA } from "@/lib/suscripcion";
 
 const BENEFICIOS: { icono: NombreIcono; titulo: string; texto: string }[] = [
   {
@@ -48,12 +49,12 @@ export default function Portada() {
               Laburo ordena tu trabajo de todos los días. Sin planillas, sin papelitos y sin complicarte.
             </p>
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-              <Link href="/registrarse" className="btn btn-primario text-lg">Crear mi cuenta gratis</Link>
+              <Link href="/registrarse" className="btn btn-primario text-lg">Probar gratis {DIAS_PRUEBA} días</Link>
               <form action={entrarDemo} className="contents">
                 <BotonAccion className="btn btn-secundario text-lg">Probar con datos de ejemplo</BotonAccion>
               </form>
             </div>
-            <p className="mt-3 text-suave">No hace falta tarjeta. La prueba se abre al instante.</p>
+            <p className="mt-3 text-suave">No hace falta tarjeta para empezar.</p>
           </div>
         </section>
 
@@ -98,6 +99,12 @@ export default function Portada() {
       </main>
 
       <footer className="border-t border-slate-200 px-5 py-8 text-center text-suave">
+        <nav aria-label="Información legal" className="mb-3 flex flex-wrap justify-center gap-x-6 gap-y-1">
+          <Link href="/terminos" className="inline-flex min-h-11 items-center font-semibold underline underline-offset-2">Términos y condiciones</Link>
+          <Link href="/privacidad" className="inline-flex min-h-11 items-center font-semibold underline underline-offset-2">Política de privacidad</Link>
+          <Link href="/suscripcion" className="inline-flex min-h-11 items-center font-semibold underline underline-offset-2">Botón de arrepentimiento</Link>
+          <Link href="/suscripcion" className="inline-flex min-h-11 items-center font-semibold underline underline-offset-2">Botón de baja</Link>
+        </nav>
         Laburo · Hecho en Argentina
       </footer>
     </div>

@@ -18,6 +18,7 @@ const PRINCIPALES: Item[] = [
 const SECUNDARIAS: Item[] = [
   { href: "/precios", texto: "Lista de precios", icono: "precios" },
   { href: "/negocio", texto: "Mi negocio", icono: "negocio" },
+  { href: "/suscripcion", texto: "Suscripción", icono: "cobro" },
   { href: "/ayuda", texto: "Ayuda", icono: "ayuda" },
 ];
 

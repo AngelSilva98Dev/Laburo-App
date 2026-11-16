@@ -1,12 +1,12 @@
 import { notFound } from "next/navigation";
 import { guardarCliente } from "@/lib/acciones";
-import { requerirSesion } from "@/lib/auth";
+import { requerirAcceso } from "@/lib/auth";
 import { obtenerCliente } from "@/lib/datos";
 import { Formulario } from "./formulario";
 import { Encabezado } from "./ui";
 
 export async function FormularioCliente({ id }: { id?: string }) {
-  const { negocio } = await requerirSesion();
+  const { negocio } = await requerirAcceso();
   const c = id ? await obtenerCliente(negocio.id, id) : null;
   if (id && !c) notFound();
   const volver = id ? `/clientes/${id}` : "/clientes";
