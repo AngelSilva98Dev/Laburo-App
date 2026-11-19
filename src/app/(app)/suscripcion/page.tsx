@@ -49,13 +49,13 @@ export default async function Suscripcion({
       {/* Estado actual, en una frase */}
       <div
         className={`rounded-2xl p-5 ${
-          plan.estado === "vencida" ? "border-2 border-red-200 bg-red-50 text-red-900" : "bg-marca-900 text-white"
+          plan.estado === "vencida" ? "border-2 border-red-200 bg-red-50 text-red-900" : "bg-destacado text-white"
         }`}
       >
         {plan.estado === "activa" && (
           <>
             <p className="flex items-center gap-2 text-xl font-bold"><Icono n="check" /> Tu suscripción está activa</p>
-            <p className="mt-1 text-marca-100">Se cobra {precio} por mes con Mercado Pago.</p>
+            <p className="mt-1 text-white/80">Se cobra {precio} por mes con Mercado Pago.</p>
           </>
         )}
         {plan.estado === "prueba" && (
@@ -63,7 +63,7 @@ export default async function Suscripcion({
             <p className="text-xl font-bold">
               {plan.diasPrueba === 1 ? "Te queda 1 día de prueba gratis" : `Te quedan ${plan.diasPrueba} días de prueba gratis`}
             </p>
-            <p className="mt-1 text-marca-100">Después, seguís usando Laburo por {precio} por mes.</p>
+            <p className="mt-1 text-white/80">Después, seguís usando Laburo por {precio} por mes.</p>
           </>
         )}
         {plan.estado === "vencida" && (
@@ -79,7 +79,7 @@ export default async function Suscripcion({
         {plan.estado === "libre" && (
           <>
             <p className="text-xl font-bold">Estás usando Laburo gratis</p>
-            <p className="mt-1 text-marca-100">Por ahora no se cobra. Te vamos a avisar antes de cualquier cambio.</p>
+            <p className="mt-1 text-white/80">Por ahora no se cobra. Te vamos a avisar antes de cualquier cambio.</p>
           </>
         )}
       </div>

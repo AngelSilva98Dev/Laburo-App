@@ -10,6 +10,7 @@ import {
   registrarPago,
 } from "@/lib/acciones";
 import { requerirAcceso, requerirSesion } from "@/lib/auth";
+import { marcarVistos } from "@/lib/avisos";
 import {
   cobroExistente,
   lineasDe,
@@ -99,8 +100,8 @@ export async function ListaDocs({ tipo }: { tipo: Tipo }) {
       </Encabezado>
 
       {tipo === "cobro" && deben > 0 && (
-        <div className="mb-4 rounded-2xl bg-marca-900 p-4 text-white">
-          <p className="text-marca-100">Te deben en total</p>
+        <div className="mb-4 rounded-2xl bg-destacado p-4 text-white">
+          <p className="text-white/80">Te deben en total</p>
           <p className="text-3xl font-bold tracking-tight">{dinero(deben)}</p>
         </div>
       )}
@@ -307,6 +308,7 @@ export async function DetalleDoc({ tipo, id }: { tipo: Tipo; id: string }) {
   const { negocio } = await requerirSesion();
   const doc = await obtenerDoc(negocio.id, id);
   if (!doc || doc.tipo !== tipo) notFound();
+  await marcarVistos(negocio.id, `${TEXTOS[tipo].ruta}/${doc.id}`);
 
   const tx = TEXTOS[tipo];
   const hoy = hoyISO();

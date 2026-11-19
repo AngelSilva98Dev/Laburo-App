@@ -16,6 +16,64 @@
   --color-fondo: #f3f5f9;
   --color-wa: #0c7a5c;
   --color-wa-oscuro: #096349;
+  /* Fondo de tarjetas, barras y campos. */
+  --color-superficie: #ffffff;
+  /* Recuadros azules con números importantes (totales, "Te deben"). */
+  --color-destacado: #112e6e;
+  --color-marca-hover: #1644b0;
+}
+
+/*
+ * Modo oscuro.
+ * En vez de agregar una variante oscura a cada pantalla, se cambian los colores de base:
+ * los fondos claros pasan a ser oscuros y los textos oscuros pasan a ser claros.
+ * Todos los pares texto/fondo mantienen contraste AA.
+ * El atributo data-tema lo pone el script de src/app/layout.tsx antes de pintar la página.
+ */
+[data-tema="oscuro"] {
+  color-scheme: dark;
+
+  --color-fondo: #0e1320;
+  --color-superficie: #171f2f;
+  --color-tinta: #e7ebf3;
+  --color-suave: #a4aec3;
+  --color-destacado: #1d3a86;
+
+  --color-slate-50: #1d2637;
+  --color-slate-100: #232d40;
+  --color-slate-200: #2d3850;
+  --color-slate-300: #3d4a66;
+  --color-slate-400: #6b7894;
+  --color-slate-700: #cdd5e1;
+
+  --color-marca-50: #15223f;
+  --color-marca-100: #1c2d57;
+  --color-marca-200: #2b4280;
+  --color-marca-600: #2f63e6;
+  --color-marca-hover: #4373ef;
+  --color-marca-700: #8cb2ff;
+  --color-marca-900: #cfdcff;
+
+  --color-red-50: #2b1618;
+  --color-red-100: #3d1d21;
+  --color-red-200: #63292f;
+  --color-red-700: #ff9b9b;
+  --color-red-800: #ffb1b1;
+  --color-red-900: #ffc4c4;
+
+  --color-amber-50: #2a2112;
+  --color-amber-100: #3b2e12;
+  --color-amber-200: #5f4a17;
+  --color-amber-900: #fcd77a;
+  --color-amber-950: #fde4a3;
+
+  --color-emerald-50: #0f291f;
+  --color-emerald-100: #133829;
+  --color-emerald-200: #1f5943;
+  --color-emerald-700: #5fd7a3;
+  --color-emerald-900: #9be8c4;
+
+  --color-wa-oscuro: #0e8a68;
 }
 
 /* Letra un poco más grande que lo habitual: se lee mejor en el celular y al sol. */
@@ -41,27 +99,27 @@ body {
     @apply inline-flex min-h-13 cursor-pointer items-center justify-center gap-2 rounded-xl px-5 text-center text-base font-semibold leading-tight transition select-none active:scale-[0.98] disabled:cursor-wait disabled:opacity-60;
   }
   .btn-primario {
-    @apply bg-marca-600 text-white shadow-sm hover:bg-marca-700;
+    @apply bg-marca-600 text-white shadow-sm hover:bg-marca-hover;
   }
   .btn-secundario {
-    @apply border-2 border-slate-300 bg-white text-tinta hover:border-slate-400 hover:bg-slate-50;
+    @apply border-2 border-slate-300 bg-superficie text-tinta hover:border-slate-400 hover:bg-slate-50;
   }
   .btn-wa {
     @apply bg-wa text-white shadow-sm hover:bg-wa-oscuro;
   }
   .btn-peligro {
-    @apply border-2 border-red-200 bg-white text-red-700 hover:bg-red-50;
+    @apply border-2 border-red-200 bg-superficie text-red-700 hover:bg-red-50;
   }
   .btn-chico {
     @apply min-h-11 px-4 text-sm;
   }
 
   .tarjeta {
-    @apply rounded-2xl border border-slate-200 bg-white p-4 shadow-sm;
+    @apply rounded-2xl border border-slate-200 bg-superficie p-4 shadow-sm;
   }
 
   .campo {
-    @apply block min-h-13 w-full rounded-xl border-2 border-slate-300 bg-white px-4 text-base text-tinta placeholder:text-slate-400 focus:border-marca-600 focus:ring-4 focus:ring-marca-100 focus:outline-none;
+    @apply block min-h-13 w-full rounded-xl border-2 border-slate-300 bg-superficie px-4 text-base text-tinta placeholder:text-slate-400 focus:border-marca-600 focus:ring-4 focus:ring-marca-100 focus:outline-none;
   }
   textarea.campo {
     @apply py-3;
@@ -88,7 +146,7 @@ body {
     @apply flex min-h-16 items-center gap-3 px-4 py-3 transition hover:bg-slate-50 active:bg-slate-100;
   }
   .lista {
-    @apply divide-y divide-slate-200 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm;
+    @apply divide-y divide-slate-200 overflow-hidden rounded-2xl border border-slate-200 bg-superficie shadow-sm;
   }
 
   details.desplegable > summary {

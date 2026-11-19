@@ -5,11 +5,12 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import type { InStatement } from "@libsql/client";
 import { cerrarSesion, cifrarClave, claveCorrecta, crearSesion, requerirAcceso, requerirSesion } from "./auth";
+import { avisar, avisoDePrueba } from "./avisos";
 import { enviarEmail } from "./email";
 import { cancelarSuscripcionMP, cobroActivo, crearSuscripcionMP, urlBase } from "./suscripcion";
 import { ejecutar, fila, lote, nuevoId } from "./db";
 import { cargarDatosDeEjemplo } from "./demo";
-import { calcularTotales, esFechaISO, hoyISO, MEDIOS_PAGO, CONDICIONES_IVA } from "./formato";
+import { calcularTotales, dinero, esFechaISO, hoyISO, MEDIOS_PAGO, CONDICIONES_IVA } from "./formato";
 
 /** Lo que devuelve una acción cuando hay algo para avisarle a la persona. */
 export type Resultado = { error?: string; ok?: string } | void;
@@ -441,11 +442,123 @@ export async function marcarEnviado(id: string) {
 export async function responderPresupuesto(fd: FormData) {
   const token = texto(fd, "token", 64);
   const respuesta = texto(fd, "respuesta") === "aprobado" ? "aprobado" : "rechazado";
-  await ejecutar(
+  const r = await ejecutar(
     "UPDATE documentos SET estado = ? WHERE token = ? AND tipo = 'presupuesto' AND estado IN ('borrador', 'enviado')",
     [respuesta, token],
   );
+  if (r.rowsAffected > 0) {
+    const d = await fila<{ id: string; negocio_id: string; titulo: string; total: number; moneda: string; cliente: string }>(
+      `SELECT d.id, d.negocio_id, d.titulo, d.total, d.moneda, c.nombre AS cliente
+       FROM documentos d JOIN clientes c ON c.id = d.cliente_id WHERE d.token = ?`,
+      [token],
+    );
+    if (d) {
+      await avisar(
+        d.negocio_id,
+        respuesta === "aprobado"
+          ? {
+              tipo: "aceptado",
+              titulo: `✅ ${d.cliente} aceptó tu presupuesto`,
+              texto: `"${d.titulo}" por ${dinero(d.total, d.moneda)}. Tocá para agendar el trabajo.`,
+              enlace: `/presupuestos/${d.id}`,
+            }
+          : {
+              tipo: "rechazado",
+              titulo: `${d.cliente} rechazó tu presupuesto`,
+              texto: `"${d.titulo}" por ${dinero(d.total, d.moneda)}. Podés escribirle para ver si se puede ajustar.`,
+              enlace: `/presupuestos/${d.id}`,
+            },
+      );
+    }
+  }
   actualizar();
+}
+
+/** El cliente toca "Avisar que ya pagué" en el link del cobro. */
+export async function clienteAvisaPago(token: string) {
+  if (!/^[a-f0-9]{32}$/.test(token)) return;
+  const d = await fila<{ id: string; negocio_id: string; titulo: string; saldo: number; moneda: string; cliente: string }>(
+    `SELECT d.id, d.negocio_id, d.titulo, d.moneda, c.nombre AS cliente,
+       d.total - COALESCE((SELECT SUM(p.monto) FROM pagos p WHERE p.doc_id = d.id), 0) AS saldo
+     FROM documentos d JOIN clientes c ON c.id = d.cliente_id
+     WHERE d.token = ? AND d.tipo = 'cobro'`,
+    [token],
+  );
+  if (!d || d.saldo <= 0.005) return;
+  const enlace = `/cobros/${d.id}`;
+  // Un aviso cada 10 minutos como máximo, aunque toquen el botón varias veces.
+  const reciente = await fila(
+    "SELECT 1 AS x FROM avisos WHERE enlace = ? AND tipo = 'pago' AND creado > datetime('now', '-10 minutes')",
+    [enlace],
+  );
+  if (reciente) return;
+  await avisar(d.negocio_id, {
+    tipo: "pago",
+    titulo: `💰 ${d.cliente} dice que ya te pagó`,
+    texto: `"${d.titulo}": faltaban ${dinero(d.saldo, d.moneda)}. Fijate si te llegó y anotá el pago.`,
+    enlace,
+  });
+  actualizar();
+}
+
+/** Lo mismo, desde un formulario (cuando el negocio no cargó su WhatsApp). */
+export async function clienteAvisaPagoForm(fd: FormData): Promise<Resultado> {
+  await clienteAvisaPago(texto(fd, "token", 64));
+  return { ok: "Listo, ya le avisamos. ¡Gracias!" };
+}
+
+/* ───────────── Avisos ───────────── */
+
+/** Abre el aviso: lo marca como visto y lleva a lo que avisa. */
+export async function abrirAviso(fd: FormData) {
+  const { negocio } = await requerirSesion();
+  const a = await fila<{ enlace: string }>("SELECT enlace FROM avisos WHERE id = ? AND negocio_id = ?", [
+    texto(fd, "id"),
+    negocio.id,
+  ]);
+  if (!a) redirect("/inicio");
+  await ejecutar("UPDATE avisos SET leido = 1 WHERE negocio_id = ? AND enlace = ?", [negocio.id, a.enlace]);
+  actualizar();
+  redirect(a.enlace);
+}
+
+export async function marcarAvisosVistos() {
+  const { negocio } = await requerirSesion();
+  await ejecutar("UPDATE avisos SET leido = 1 WHERE negocio_id = ? AND leido = 0", [negocio.id]);
+  actualizar();
+}
+
+type DatosSuscripcion = { endpoint?: unknown; keys?: { p256dh?: unknown; auth?: unknown } };
+
+/** Guarda el celular o la computadora que aceptó recibir notificaciones. */
+export async function guardarSuscripcionPush(sub: DatosSuscripcion) {
+  const { negocio, usuario } = await requerirSesion();
+  const endpoint = String(sub?.endpoint ?? "");
+  const p256dh = String(sub?.keys?.p256dh ?? "");
+  const auth = String(sub?.keys?.auth ?? "");
+  if (!/^https:\/\/[^\s]{10,900}$/.test(endpoint) || !p256dh || !auth || p256dh.length > 200 || auth.length > 100) {
+    return { error: "No pudimos activar los avisos en este dispositivo." };
+  }
+  await ejecutar(
+    `INSERT INTO push_suscripciones (endpoint, negocio_id, usuario_id, p256dh, auth) VALUES (?, ?, ?, ?, ?)
+     ON CONFLICT(endpoint) DO UPDATE SET negocio_id = excluded.negocio_id, usuario_id = excluded.usuario_id,
+       p256dh = excluded.p256dh, auth = excluded.auth`,
+    [endpoint, negocio.id, usuario.id, p256dh, auth],
+  );
+  return { ok: true };
+}
+
+export async function borrarSuscripcionPush(endpoint: string) {
+  const { negocio } = await requerirSesion();
+  await ejecutar("DELETE FROM push_suscripciones WHERE endpoint = ? AND negocio_id = ?", [String(endpoint), negocio.id]);
+}
+
+export async function probarAvisos() {
+  const { negocio } = await requerirSesion();
+  const enviadas = await avisoDePrueba(negocio.id);
+  return enviadas > 0
+    ? { ok: "Te mandamos un aviso de prueba. Debería aparecerte en unos segundos." }
+    : { error: "No pudimos mandar el aviso. Desactivá y volvé a activar los avisos en este dispositivo." };
 }
 
 /* ───────────── Pagos ───────────── */

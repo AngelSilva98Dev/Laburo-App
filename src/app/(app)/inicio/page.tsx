@@ -1,8 +1,12 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { ActivarAvisos } from "@/components/activar-avisos";
+import { BotonAccion } from "@/components/formulario";
 import { FilaTrabajo } from "@/components/trabajos";
 import { Icono, TituloSeccion, type NombreIcono } from "@/components/ui";
+import { abrirAviso, marcarAvisosVistos } from "@/lib/acciones";
 import { requerirSesion } from "@/lib/auth";
+import { avisosSinLeer, clavesPush } from "@/lib/avisos";
 import { resumen, trabajosEntre } from "@/lib/datos";
 import { dinero, fechaLarga, hoyISO, sumarDias } from "@/lib/formato";
 import { acceso } from "@/lib/suscripcion";
@@ -19,7 +23,12 @@ const ATAJOS: { href: string; texto: string; icono: NombreIcono }[] = [
 export default async function Inicio() {
   const { usuario, negocio } = await requerirSesion();
   const hoy = hoyISO();
-  const [r, proximos] = await Promise.all([resumen(negocio.id), trabajosEntre(negocio.id, hoy, sumarDias(hoy, 1))]);
+  const [r, proximos, avisos, claves] = await Promise.all([
+    resumen(negocio.id),
+    trabajosEntre(negocio.id, hoy, sumarDias(hoy, 1)),
+    avisosSinLeer(negocio.id),
+    clavesPush(),
+  ]);
   const deHoy = proximos.filter((t) => t.fecha === hoy && t.estado !== "cancelado");
   const deManiana = proximos.filter((t) => t.fecha !== hoy && t.estado !== "cancelado");
   const pesos = r.porCobrar.find((p) => p.moneda === "ARS");
@@ -33,6 +42,46 @@ export default async function Inicio() {
         <p className="text-suave first-letter:uppercase">{fechaLarga(hoy)}</p>
         <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">Hola, {usuario.nombre.split(" ")[0]}</h1>
       </header>
+
+      {/* Novedades de los clientes: lo primero que se ve. */}
+      {avisos.length > 0 && (
+        <section aria-labelledby="novedades" className="mb-5">
+          <div className="mb-2 flex items-center justify-between gap-3">
+            <h2 id="novedades" className="flex items-center gap-2 text-lg font-bold">
+              <Icono n="campana" className="size-5 text-marca-600" /> Novedades
+            </h2>
+            <form action={marcarAvisosVistos}>
+              <BotonAccion className="min-h-11 cursor-pointer px-2 text-sm font-semibold text-marca-700 underline underline-offset-2">
+                Marcar todo como visto
+              </BotonAccion>
+            </form>
+          </div>
+          <ul className="lista">
+            {avisos.map((a) => (
+              <li key={a.id}>
+                <form action={abrirAviso}>
+                  <input type="hidden" name="id" value={a.id} />
+                  <button type="submit" className="fila w-full cursor-pointer text-left">
+                    <span
+                      className={`grid size-11 shrink-0 place-items-center rounded-full ${
+                        a.tipo === "rechazado" ? "bg-red-100 text-red-800" : "bg-emerald-100 text-emerald-900"
+                      }`}
+                      aria-hidden="true"
+                    >
+                      <Icono n={a.tipo === "pago" ? "cobro" : a.tipo === "rechazado" ? "presupuesto" : "check"} />
+                    </span>
+                    <span className="min-w-0 flex-1">
+                      <span className="block font-semibold">{a.titulo.replace(/^\P{L}+/u, "")}</span>
+                      <span className="block text-sm text-suave">{a.texto}</span>
+                    </span>
+                    <Icono n="derecha" className="size-5 text-slate-400" />
+                  </button>
+                </form>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
 
       {plan.estado === "vencida" && (
         <Link href="/suscripcion" className="mb-4 flex items-center gap-3 rounded-2xl border-2 border-red-200 bg-red-50 p-4 text-red-900">
@@ -69,6 +118,8 @@ export default async function Inicio() {
           <p className="mt-1 text-sm font-semibold text-marca-700">Ver presupuestos</p>
         </Link>
       </div>
+
+      <ActivarAvisos clavePublica={claves.publica} variante="banner" />
 
       {r.clientes === 0 && (
         <div className="mt-4 rounded-2xl border-2 border-marca-200 bg-marca-50 p-5">

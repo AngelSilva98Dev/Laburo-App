@@ -2,9 +2,9 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { connection } from "next/server";
 import { TablaLineas } from "@/components/documentos";
-import { BotonAccion, BotonCopiar, BotonImprimir } from "@/components/formulario";
+import { BotonAccion, BotonCopiar, BotonImprimir, BotonWhatsApp, Formulario } from "@/components/formulario";
 import { Icono } from "@/components/ui";
-import { responderPresupuesto } from "@/lib/acciones";
+import { clienteAvisaPago, clienteAvisaPagoForm, responderPresupuesto } from "@/lib/acciones";
 import { docPorToken, lineasDe, type Negocio } from "@/lib/datos";
 import { fila } from "@/lib/db";
 import { CONDICIONES_IVA, dinero, fechaCorta, hoyISO, linkWhatsApp, numeroDoc } from "@/lib/formato";
@@ -130,10 +130,14 @@ export default async function DocumentoPublico({ params }: { params: Promise<{ t
                 Pagar con Mercado Pago
               </a>
             )}
-            {negocio.telefono && (
-              <a href={avisoPago} target="_blank" rel="noopener noreferrer" className="btn btn-wa mt-3 w-full">
+            {negocio.telefono ? (
+              <BotonWhatsApp href={avisoPago} alEnviar={clienteAvisaPago.bind(null, doc.token)} className="btn btn-wa mt-3 w-full">
                 <Icono n="whatsapp" /> Avisar que ya pagué
-              </a>
+              </BotonWhatsApp>
+            ) : (
+              <Formulario accion={clienteAvisaPagoForm} boton="Avisar que ya pagué" claseBoton="btn btn-wa w-full" className="mt-3 space-y-3">
+                <input type="hidden" name="token" value={doc.token} />
+              </Formulario>
             )}
           </section>
         )}

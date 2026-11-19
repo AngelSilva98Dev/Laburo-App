@@ -1,8 +1,12 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { ActivarAvisos } from "@/components/activar-avisos";
 import { BotonAccion } from "@/components/formulario";
-import { Encabezado, Icono, type NombreIcono } from "@/components/ui";
+import { SelectorTema } from "@/components/selector-tema";
+import { Encabezado, Icono, TituloSeccion, type NombreIcono } from "@/components/ui";
 import { salir } from "@/lib/acciones";
+import { requerirSesion } from "@/lib/auth";
+import { clavesPush } from "@/lib/avisos";
 
 export const metadata: Metadata = { title: "Más" };
 
@@ -13,7 +17,9 @@ const OPCIONES: { href: string; texto: string; detalle: string; icono: NombreIco
   { href: "/ayuda", texto: "Ayuda", detalle: "Cómo usar Laburo, paso a paso", icono: "ayuda" },
 ];
 
-export default function Mas() {
+export default async function Mas() {
+  await requerirSesion();
+  const claves = await clavesPush();
   return (
     <>
       <Encabezado titulo="Más opciones" />
@@ -33,6 +39,18 @@ export default function Mas() {
           </li>
         ))}
       </ul>
+
+      <TituloSeccion>Avisos en el celular</TituloSeccion>
+      <div className="tarjeta">
+        <ActivarAvisos clavePublica={claves.publica} variante="completo" />
+      </div>
+
+      <TituloSeccion>Apariencia</TituloSeccion>
+      <div className="tarjeta">
+        <SelectorTema />
+        <p className="ayuda">“Automático” usa el mismo modo que tu celular. El oscuro cansa menos la vista de noche y gasta menos batería.</p>
+      </div>
+
       <form action={salir} className="mt-6">
         <BotonAccion className="btn btn-secundario w-full">
           <Icono n="salir" /> Cerrar sesión

@@ -68,7 +68,7 @@ export function EditorLineas({
       <input type="hidden" name="lineas" value={JSON.stringify(lineas)} />
 
       {filas.map((f, i) => (
-        <div key={f.clave} className="rounded-xl border-2 border-slate-200 bg-white p-3">
+        <div key={f.clave} className="rounded-xl border-2 border-slate-200 bg-superficie p-3">
           <div className="flex items-start gap-2">
             <div className="min-w-0 flex-1">
               <label htmlFor={`desc-${f.clave}`} className="mb-1 block text-sm font-semibold text-suave">
@@ -168,7 +168,7 @@ export function EditorLineas({
         )}
       </div>
 
-      <details className="desplegable rounded-xl border-2 border-slate-200 bg-white px-4" open={!!descuentoInicial || monedaInicial === "USD"}>
+      <details className="desplegable rounded-xl border-2 border-slate-200 bg-superficie px-4" open={!!descuentoInicial || monedaInicial === "USD"}>
         <summary>Más opciones: descuento, dólares{ofrecerIva ? ", IVA" : ""}</summary>
         <div className="space-y-4 pb-4">
           <div>
@@ -202,9 +202,9 @@ export function EditorLineas({
         </div>
       </details>
 
-      <div className="rounded-2xl bg-marca-900 p-4 text-white" aria-live="polite">
+      <div className="rounded-2xl bg-destacado p-4 text-white" aria-live="polite">
         {(t.descuento > 0 || t.iva > 0) && (
-          <dl className="mb-2 space-y-1 text-marca-100">
+          <dl className="mb-2 space-y-1 text-white/80">
             <div className="flex justify-between"><dt>Subtotal</dt><dd>{dinero(t.subtotal, moneda)}</dd></div>
             {t.descuento > 0 && <div className="flex justify-between"><dt>Descuento</dt><dd>– {dinero(t.descuento, moneda)}</dd></div>}
             {t.iva > 0 && <div className="flex justify-between"><dt>IVA 21%</dt><dd>{dinero(t.iva, moneda)}</dd></div>}

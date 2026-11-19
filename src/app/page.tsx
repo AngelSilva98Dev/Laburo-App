@@ -30,7 +30,7 @@ const BENEFICIOS: { icono: NombreIcono; titulo: string; texto: string }[] = [
 
 export default function Portada() {
   return (
-    <div className="bg-white">
+    <div className="bg-superficie">
       <header className="mx-auto flex max-w-5xl items-center justify-between px-5 py-4">
         <Logo />
         <Link href="/ingresar" className="btn btn-secundario btn-chico">Ingresar</Link>

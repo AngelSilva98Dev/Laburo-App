@@ -122,6 +122,30 @@ CREATE TABLE IF NOT EXISTS intentos_ingreso (
   momento TEXT NOT NULL DEFAULT (datetime('now'))
 );
 CREATE INDEX IF NOT EXISTS idx_intentos_email ON intentos_ingreso(email, momento);
+CREATE TABLE IF NOT EXISTS avisos (
+  id TEXT PRIMARY KEY,
+  negocio_id TEXT NOT NULL REFERENCES negocios(id),
+  tipo TEXT NOT NULL,
+  titulo TEXT NOT NULL,
+  texto TEXT NOT NULL,
+  enlace TEXT NOT NULL,
+  leido INTEGER NOT NULL DEFAULT 0,
+  creado TEXT DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_avisos_negocio ON avisos(negocio_id, leido, creado);
+CREATE TABLE IF NOT EXISTS push_suscripciones (
+  endpoint TEXT PRIMARY KEY,
+  negocio_id TEXT NOT NULL REFERENCES negocios(id),
+  usuario_id TEXT NOT NULL REFERENCES usuarios(id),
+  p256dh TEXT NOT NULL,
+  auth TEXT NOT NULL,
+  creado TEXT DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_push_negocio ON push_suscripciones(negocio_id);
+CREATE TABLE IF NOT EXISTS ajustes (
+  clave TEXT PRIMARY KEY,
+  valor TEXT NOT NULL
+);
 `;
 
 /** Columnas que se agregaron después de la primera versión. Se suman solas si faltan. */

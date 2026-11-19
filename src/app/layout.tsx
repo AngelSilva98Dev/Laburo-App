@@ -1,6 +1,8 @@
 import type { Metadata, Viewport } from "next";
 import { Geist } from "next/font/google";
+import Script from "next/script";
 import "./globals.css";
+import { SCRIPT_TEMA } from "@/lib/tema";
 
 const geist = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
 
@@ -14,7 +16,10 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#1b54d6",
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
+    { media: "(prefers-color-scheme: dark)", color: "#0e1320" },
+  ],
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
@@ -22,8 +27,12 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="es-AR" className={`${geist.variable} h-full antialiased`}>
-      <body className="min-h-full font-sans">{children}</body>
+    <html lang="es-AR" className={`${geist.variable} h-full antialiased`} suppressHydrationWarning>
+      <body className="min-h-full font-sans">
+        {children}
+        {/* Pone claro u oscuro antes de que se vea la página, para que no parpadee. */}
+        <Script id="tema" strategy="beforeInteractive" dangerouslySetInnerHTML={{ __html: SCRIPT_TEMA }} />
+      </body>
     </html>
   );
 }

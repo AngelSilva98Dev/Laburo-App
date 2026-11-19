@@ -14,6 +14,8 @@ Plataforma de gestión para oficios y servicios a domicilio en Argentina (plomer
 | **Lista de precios** | Catálogo de servicios y materiales, y **aumento masivo por porcentaje** con redondeo (pensado para la inflación). |
 | **Clientes** | Ficha con historial, deuda y contacto rápido. Se pueden cargar en el momento, dentro del presupuesto. |
 | **Cuentas** | Registro con email y contraseña, recuperación de contraseña por email, límite de intentos de ingreso, cada negocio ve solo sus datos. Cuenta de prueba con datos de ejemplo. |
+| **Avisos** | Cuando un cliente acepta o rechaza un presupuesto, o avisa que ya pagó: aviso en Inicio y notificación en el celular (o email si no las activó). |
+| **Apariencia** | Modo claro, oscuro o automático (igual que el celular). |
 | **Suscripción** | Prueba gratis, suscripción mensual con Mercado Pago, bloqueo de carga al vencer y botón de baja. |
 | **Legales** | Términos y condiciones y Política de privacidad (Ley 25.326), en borrador para revisión de un abogado. |
 

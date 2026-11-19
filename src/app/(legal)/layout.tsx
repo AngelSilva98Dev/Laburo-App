@@ -3,7 +3,7 @@ import { Logo } from "@/components/logo";
 
 export default function LegalLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="bg-white">
+    <div className="bg-superficie">
       <header className="mx-auto flex max-w-3xl items-center justify-between px-5 py-4">
         <Link href="/" aria-label="Laburo, volver a la portada"><Logo /></Link>
         <Link href="/" className="btn btn-secundario btn-chico">Volver</Link>
