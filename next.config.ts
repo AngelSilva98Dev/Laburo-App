@@ -3,6 +3,10 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   /* config options here */
   cacheComponents: true,
+  experimental: {
+    // Las fotos se achican en el celular antes de subirlas (quedan en ~300 KB), esto deja margen.
+    serverActions: { bodySizeLimit: "2mb" },
+  },
   async headers() {
     return [
       {

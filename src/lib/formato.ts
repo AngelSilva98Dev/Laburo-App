@@ -156,6 +156,26 @@ export const CONDICIONES_IVA: Record<string, string> = {
   ninguna: "Todavía no estoy inscripto",
 };
 
+/** Días entre dos fechas AAAA-MM-DD (positivo si "hasta" es posterior). */
+export function diasEntre(desde: string, hasta: string) {
+  return Math.round((aFecha(hasta).getTime() - aFecha(desde).getTime()) / 86400_000);
+}
+
+/** Mensaje de WhatsApp para mandar un cobro, o para recordarlo con buena onda si está atrasado. */
+export function mensajeCobro(
+  d: { titulo: string; total: number; pagado: number; moneda: string; vence: string | null; cliente_nombre: string },
+  negocio: string,
+  url: string,
+  hoy: string,
+) {
+  const nombre = d.cliente_nombre.split(" ")[0];
+  const saldo = Math.max(d.total - d.pagado, 0);
+  if (d.vence && d.vence < hoy) {
+    return `Hola ${nombre}! ¿Cómo estás? Te escribo de ${negocio} para recordarte que quedó pendiente el pago de "${d.titulo}" por ${dinero(saldo, d.moneda)}.\n\nAcá tenés los datos para pagar:\n${url}\n\n¡Muchas gracias!`;
+  }
+  return `Hola ${nombre}! Te paso el detalle de ${negocio} por "${d.titulo}".\n${d.pagado > 0 ? "Falta pagar" : "Total"}: ${dinero(saldo, d.moneda)}\n\nAcá están los datos para pagar:\n${url}`;
+}
+
 /** Calcula los totales de un presupuesto o cobro. */
 export function calcularTotales(
   lineas: { cantidad: number; precio: number }[],

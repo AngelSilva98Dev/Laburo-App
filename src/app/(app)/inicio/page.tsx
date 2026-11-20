@@ -7,8 +7,9 @@ import { Icono, TituloSeccion, type NombreIcono } from "@/components/ui";
 import { abrirAviso, marcarAvisosVistos } from "@/lib/acciones";
 import { requerirSesion } from "@/lib/auth";
 import { avisosSinLeer, clavesPush } from "@/lib/avisos";
-import { resumen, trabajosEntre } from "@/lib/datos";
+import { cobrosAtrasados, resumen, trabajosEntre } from "@/lib/datos";
 import { dinero, fechaLarga, hoyISO, sumarDias } from "@/lib/formato";
+import { cobradoPorMes } from "@/lib/numeros";
 import { acceso } from "@/lib/suscripcion";
 
 export const metadata: Metadata = { title: "Inicio" };
@@ -23,12 +24,16 @@ const ATAJOS: { href: string; texto: string; icono: NombreIcono }[] = [
 export default async function Inicio() {
   const { usuario, negocio } = await requerirSesion();
   const hoy = hoyISO();
-  const [r, proximos, avisos, claves] = await Promise.all([
+  const [r, proximos, avisos, claves, atrasados, esteMes] = await Promise.all([
     resumen(negocio.id),
     trabajosEntre(negocio.id, hoy, sumarDias(hoy, 1)),
     avisosSinLeer(negocio.id),
     clavesPush(),
+    cobrosAtrasados(negocio.id, hoy),
+    cobradoPorMes(negocio.id, hoy.slice(0, 7)),
   ]);
+  const cobradoMes = esteMes.find((f) => f.moneda === "ARS")?.total ?? 0;
+  const sinRecordarHoy = atrasados.filter((d) => d.ultimo_recordatorio !== hoy);
   const deHoy = proximos.filter((t) => t.fecha === hoy && t.estado !== "cancelado");
   const deManiana = proximos.filter((t) => t.fecha !== hoy && t.estado !== "cancelado");
   const pesos = r.porCobrar.find((p) => p.moneda === "ARS");
@@ -118,6 +123,35 @@ export default async function Inicio() {
           <p className="mt-1 text-sm font-semibold text-marca-700">Ver presupuestos</p>
         </Link>
       </div>
+      <Link href="/numeros" className="tarjeta mt-3 flex items-center gap-3 transition hover:border-marca-200">
+        <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-marca-100 text-marca-700">
+          <Icono n="subir" />
+        </span>
+        <span className="flex-1">
+          <span className="block text-sm text-suave">Este mes cobraste</span>
+          <span className="block text-xl font-bold">{dinero(cobradoMes)}</span>
+        </span>
+        <span className="text-sm font-semibold text-marca-700">Cuánto gané</span>
+        <Icono n="derecha" className="size-5 text-marca-700" />
+      </Link>
+
+      {sinRecordarHoy.length > 0 && (
+        <Link
+          href="/cobros/atrasados"
+          className="mt-4 flex items-center gap-3 rounded-2xl border-2 border-red-200 bg-red-50 p-4 text-red-900"
+        >
+          <span className="grid size-11 shrink-0 place-items-center rounded-xl bg-red-100">
+            <Icono n="cobro" />
+          </span>
+          <span className="flex-1">
+            <strong className="block">
+              {sinRecordarHoy.length === 1 ? "1 cliente se atrasó con el pago" : `${sinRecordarHoy.length} clientes se atrasaron con el pago`}
+            </strong>
+            <span className="text-sm">Recordales por WhatsApp con un toque.</span>
+          </span>
+          <Icono n="derecha" className="size-5" />
+        </Link>
+      )}
 
       <ActivarAvisos clavePublica={claves.publica} variante="banner" />
 

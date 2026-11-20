@@ -7,6 +7,7 @@ import type { InStatement } from "@libsql/client";
 import { cerrarSesion, cifrarClave, claveCorrecta, crearSesion, requerirAcceso, requerirSesion } from "./auth";
 import { avisar, avisoDePrueba } from "./avisos";
 import { enviarEmail } from "./email";
+import { MAX_BYTES_FOTO, MAX_FOTOS_POR_TRABAJO } from "./fotos";
 import { cancelarSuscripcionMP, cobroActivo, crearSuscripcionMP, urlBase } from "./suscripcion";
 import { ejecutar, fila, lote, nuevoId } from "./db";
 import { cargarDatosDeEjemplo } from "./demo";
@@ -561,6 +562,17 @@ export async function probarAvisos() {
     : { error: "No pudimos mandar el aviso. Desactivá y volvé a activar los avisos en este dispositivo." };
 }
 
+/** Al tocar "Recordarle por WhatsApp" queda anotado que hoy se le recordó. */
+export async function marcarRecordado(id: string) {
+  const { negocio } = await requerirSesion();
+  await ejecutar("UPDATE documentos SET ultimo_recordatorio = ? WHERE id = ? AND negocio_id = ? AND tipo = 'cobro'", [
+    hoyISO(),
+    id,
+    negocio.id,
+  ]);
+  actualizar();
+}
+
 /* ───────────── Pagos ───────────── */
 
 export async function registrarPago(fd: FormData): Promise<Resultado> {
@@ -629,6 +641,44 @@ export async function guardarTrabajo(fd: FormData): Promise<Resultado> {
   redirect(`/trabajos/${destino}`);
 }
 
+/* ───────────── Fotos del trabajo ───────────── */
+
+export async function subirFoto(fd: FormData): Promise<Resultado> {
+  const { negocio } = await requerirAcceso();
+  const trabajoId = texto(fd, "trabajo_id");
+  const etapa = texto(fd, "etapa") === "antes" ? "antes" : "despues";
+  const archivo = fd.get("foto");
+  if (!(archivo instanceof Blob) || archivo.size === 0) return { error: "No llegó la foto. Probá de nuevo." };
+  if (archivo.size > MAX_BYTES_FOTO) return { error: "La foto es muy pesada. Probá sacarla de nuevo." };
+
+  const datos = new Uint8Array(await archivo.arrayBuffer());
+  // Tiene que ser un JPEG de verdad (el celular la convierte antes de subirla).
+  if (datos[0] !== 0xff || datos[1] !== 0xd8 || datos[2] !== 0xff) return { error: "Ese archivo no es una foto." };
+
+  const t = await fila<{ n: number }>(
+    `SELECT (SELECT COUNT(*) FROM fotos WHERE trabajo_id = t.id) AS n FROM trabajos t WHERE t.id = ? AND t.negocio_id = ?`,
+    [trabajoId, negocio.id],
+  );
+  if (!t) return { error: "No encontramos ese trabajo." };
+  if (t.n >= MAX_FOTOS_POR_TRABAJO) return { error: `Llegaste al máximo de ${MAX_FOTOS_POR_TRABAJO} fotos por trabajo. Borrá alguna para agregar otra.` };
+
+  await ejecutar("INSERT INTO fotos (id, negocio_id, trabajo_id, etapa, datos, bytes) VALUES (?, ?, ?, ?, ?, ?)", [
+    nuevoId(),
+    negocio.id,
+    trabajoId,
+    etapa,
+    datos,
+    datos.length,
+  ]);
+  actualizar();
+}
+
+export async function borrarFoto(fd: FormData) {
+  const { negocio } = await requerirSesion();
+  await ejecutar("DELETE FROM fotos WHERE id = ? AND negocio_id = ?", [texto(fd, "id"), negocio.id]);
+  actualizar();
+}
+
 export async function cambiarEstadoTrabajo(fd: FormData) {
   const { negocio } = await requerirSesion();
   const estado = texto(fd, "estado");
@@ -639,7 +689,10 @@ export async function cambiarEstadoTrabajo(fd: FormData) {
 
 export async function borrarTrabajo(fd: FormData) {
   const { negocio } = await requerirSesion();
-  await ejecutar("DELETE FROM trabajos WHERE id = ? AND negocio_id = ?", [texto(fd, "id"), negocio.id]);
+  await lote([
+    { sql: "DELETE FROM fotos WHERE trabajo_id = ? AND negocio_id = ?", args: [texto(fd, "id"), negocio.id] },
+    { sql: "DELETE FROM trabajos WHERE id = ? AND negocio_id = ?", args: [texto(fd, "id"), negocio.id] },
+  ]);
   actualizar();
   redirect("/agenda");
 }

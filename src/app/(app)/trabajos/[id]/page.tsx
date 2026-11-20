@@ -1,11 +1,14 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { FotosTrabajo } from "@/components/fotos";
 import { BotonAccion, BotonWhatsApp } from "@/components/formulario";
 import { Chip, Encabezado, Icono, TituloSeccion } from "@/components/ui";
 import { borrarTrabajo, cambiarEstadoTrabajo } from "@/lib/acciones";
 import { requerirSesion } from "@/lib/auth";
 import { cobroExistente, obtenerTrabajo } from "@/lib/datos";
+import { fotosDeTrabajo } from "@/lib/fotos";
+import { acceso } from "@/lib/suscripcion";
 import { estadoTrabajo, fechaAmigable, fechaLarga, hoyISO, linkMapa, linkWhatsApp, telefonoWhatsApp } from "@/lib/formato";
 
 export const metadata: Metadata = { title: "Trabajo" };
@@ -27,7 +30,7 @@ export default async function DetalleTrabajo({ params }: { params: Promise<{ id:
   if (!t) notFound();
 
   const hoy = hoyISO();
-  const cobro = await cobroExistente(negocio.id, "trabajo_id", t.id);
+  const [cobro, fotos] = await Promise.all([cobroExistente(negocio.id, "trabajo_id", t.id), fotosDeTrabajo(negocio.id, t.id)]);
   const nombre = t.cliente_nombre.split(" ")[0];
   const cuando = t.fecha
     ? `${t.fecha === hoy ? "hoy" : `el ${fechaLarga(t.fecha)}`}${t.hora ? ` a las ${t.hora}` : ""}`
@@ -121,6 +124,9 @@ export default async function DetalleTrabajo({ params }: { params: Promise<{ id:
           </div>
         </>
       )}
+
+      <TituloSeccion>Fotos del trabajo</TituloSeccion>
+      <FotosTrabajo trabajoId={t.id} fotos={fotos} puedeSubir={acceso(negocio).puedeEscribir} />
 
       <TituloSeccion>Otras acciones</TituloSeccion>
       <div className="grid gap-3 sm:grid-cols-2">

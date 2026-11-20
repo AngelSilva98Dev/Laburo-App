@@ -66,6 +66,7 @@ export type Doc = {
   total: number;
   moneda: string;
   token: string;
+  ultimo_recordatorio: string;
   cliente_nombre: string;
   cliente_telefono: string;
   pagado: number;
@@ -175,6 +176,14 @@ export function trabajoDePresupuesto(negocioId: string, presupuestoId: string) {
     "SELECT id FROM trabajos WHERE negocio_id = ? AND presupuesto_id = ?",
     [negocioId, presupuestoId],
   );
+}
+
+/** Cobros con saldo y fecha de pago vencida, del más viejo al más nuevo. */
+export async function cobrosAtrasados(negocioId: string, hoy: string) {
+  const docs = await listarDocs(negocioId, "cobro");
+  return docs
+    .filter((d) => d.total - d.pagado > 0.005 && d.vence && d.vence < hoy)
+    .sort((a, b) => (a.vence ?? "").localeCompare(b.vence ?? ""));
 }
 
 /** Números para la pantalla de inicio. */

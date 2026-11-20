@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { Formulario } from "@/components/formulario";
-import { Encabezado } from "@/components/ui";
+import { Encabezado, Icono } from "@/components/ui";
 import { guardarNegocio } from "@/lib/acciones";
 import { requerirSesion } from "@/lib/auth";
 import { CONDICIONES_IVA } from "@/lib/formato";
@@ -78,6 +78,16 @@ export default async function MiNegocio() {
           </div>
         </div>
       </Formulario>
+
+      <h2 className="mt-8 mb-2 text-lg font-bold">Tus datos</h2>
+      <div className="tarjeta">
+        <p className="mb-4 text-suave">
+          Bajá todos tus clientes, presupuestos, cobros, pagos y trabajos en una planilla de Excel. Te sirve como copia de seguridad o para pasarle a tu contador.
+        </p>
+        <a href="/exportar" download className="btn btn-secundario w-full sm:w-auto">
+          <Icono n="descargar" /> Descargar mis datos en Excel
+        </a>
+      </div>
 
       <p className="mt-8 text-sm text-suave">Cuenta: {usuario.email}</p>
     </>

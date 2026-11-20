@@ -15,6 +15,10 @@ Plataforma de gestión para oficios y servicios a domicilio en Argentina (plomer
 | **Clientes** | Ficha con historial, deuda y contacto rápido. Se pueden cargar en el momento, dentro del presupuesto. |
 | **Cuentas** | Registro con email y contraseña, recuperación de contraseña por email, límite de intentos de ingreso, cada negocio ve solo sus datos. Cuenta de prueba con datos de ejemplo. |
 | **Avisos** | Cuando un cliente acepta o rechaza un presupuesto, o avisa que ya pagó: aviso en Inicio y notificación en el celular (o email si no las activó). |
+| **Cobros atrasados** | Lista de quién se atrasó, con un botón de WhatsApp para recordarle a cada uno; queda marcado "recordado hoy". |
+| **Fotos del trabajo** | Antes y después en cada trabajo, achicadas en el celular. El cliente ve las de "después" en el link del cobro. |
+| **Cuánto gané** | Lo cobrado en el mes, comparación con el mes anterior, últimos 6 meses y por medio de pago. |
+| **Mis datos en Excel** | Descarga de clientes, presupuestos, cobros, pagos, trabajos e ítems en una planilla. |
 | **Apariencia** | Modo claro, oscuro o automático (igual que el celular). |
 | **Suscripción** | Prueba gratis, suscripción mensual con Mercado Pago, bloqueo de carga al vencer y botón de baja. |
 | **Legales** | Términos y condiciones y Política de privacidad (Ley 25.326), en borrador para revisión de un abogado. |
@@ -59,8 +63,9 @@ El código ya incluye prueba gratis, suscripción mensual, recuperación de cont
 2. **Hosting — [Vercel](https://vercel.com).** "Add New → Project", elegí este repositorio de GitHub y cargá las variables de entorno. Después conectá tu dominio y poné esa dirección en `URL_PUBLICA`.
 3. **Emails — [Resend](https://resend.com).** Verificá tu dominio y creá una API key → `RESEND_API_KEY`, `EMAIL_REMITENTE`. Sin esto, "Olvidé mi contraseña" no envía nada.
 4. **Cobro — [Mercado Pago Developers](https://www.mercadopago.com.ar/developers).** Creá una aplicación con el producto Suscripciones y copiá el Access Token de producción → `MP_ACCESS_TOKEN`. En "Webhooks" apuntá a `https://TU-DOMINIO/api/mercadopago`, activá el evento de suscripciones y copiá la clave secreta → `MP_WEBHOOK_SECRET`.
-5. **Precio y prueba.** `PRECIO_MENSUAL` (en pesos) y `DIAS_PRUEBA`.
-6. **Textos legales.** Completá `LEGAL_TITULAR`, `LEGAL_CUIT`, `LEGAL_DOMICILIO` y `EMAIL_CONTACTO`. Los textos de `/terminos` y `/privacidad` son un borrador: hacelos revisar por un abogado antes de publicar.
+5. **Tarea diaria.** `vercel.json` programa `/api/cron/diario` todos los días a las 9 (hora de Argentina): avisa a quienes se les termina la prueba gratis. Cargá `CRON_SECRET` con cualquier texto largo y Vercel lo usa solo.
+6. **Precio y prueba.** `PRECIO_MENSUAL` (en pesos) y `DIAS_PRUEBA`.
+7. **Textos legales.** Completá `LEGAL_TITULAR`, `LEGAL_CUIT`, `LEGAL_DOMICILIO` y `EMAIL_CONTACTO`. Los textos de `/terminos` y `/privacidad` son un borrador: hacelos revisar por un abogado antes de publicar.
 
 ### Cómo funciona el cobro
 

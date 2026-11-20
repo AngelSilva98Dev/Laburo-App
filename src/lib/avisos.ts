@@ -94,6 +94,7 @@ async function enviarPush(negocioId: string, datos: { title: string; body: strin
 export async function avisar(
   negocioId: string,
   aviso: { tipo: string; titulo: string; texto: string; enlace: string },
+  { respaldoEmail = true }: { respaldoEmail?: boolean } = {},
 ) {
   await ejecutar(
     "INSERT INTO avisos (id, negocio_id, tipo, titulo, texto, enlace) VALUES (?, ?, ?, ?, ?, ?)",
@@ -109,7 +110,7 @@ export async function avisar(
         url: aviso.enlace,
         tag: `${aviso.tipo}:${aviso.enlace}`,
       });
-      if (enviadas > 0) return;
+      if (enviadas > 0 || !respaldoEmail) return;
       // Sin notificaciones activas: respaldo por email.
       const usuarios = await filas<{ email: string; nombre: string }>(
         "SELECT email, nombre FROM usuarios WHERE negocio_id = ? AND email NOT LIKE '%@ejemplo.laburo'",
@@ -140,10 +141,11 @@ export function avisoDePrueba(negocioId: string) {
 
 /* ───────────── Leer ───────────── */
 
+/** Los de fin de prueba no se listan: Inicio ya muestra su propio cartel. */
 export function avisosSinLeer(negocioId: string) {
   return filas<Aviso>(
     `SELECT id, tipo, titulo, texto, enlace, creado FROM avisos
-     WHERE negocio_id = ? AND leido = 0 ORDER BY creado DESC LIMIT 8`,
+     WHERE negocio_id = ? AND leido = 0 AND tipo <> 'prueba' ORDER BY creado DESC LIMIT 8`,
     [negocioId],
   );
 }

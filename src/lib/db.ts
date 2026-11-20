@@ -142,6 +142,16 @@ CREATE TABLE IF NOT EXISTS push_suscripciones (
   creado TEXT DEFAULT (datetime('now'))
 );
 CREATE INDEX IF NOT EXISTS idx_push_negocio ON push_suscripciones(negocio_id);
+CREATE TABLE IF NOT EXISTS fotos (
+  id TEXT PRIMARY KEY,
+  negocio_id TEXT NOT NULL REFERENCES negocios(id),
+  trabajo_id TEXT NOT NULL REFERENCES trabajos(id),
+  etapa TEXT NOT NULL DEFAULT 'despues',
+  datos BLOB NOT NULL,
+  bytes INTEGER NOT NULL,
+  creado TEXT DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_fotos_trabajo ON fotos(trabajo_id, etapa, creado);
 CREATE TABLE IF NOT EXISTS ajustes (
   clave TEXT PRIMARY KEY,
   valor TEXT NOT NULL
@@ -152,6 +162,10 @@ CREATE TABLE IF NOT EXISTS ajustes (
 const COLUMNAS_NUEVAS: [tabla: string, columna: string, definicion: string][] = [
   ["negocios", "suscripcion_estado", "TEXT DEFAULT ''"],
   ["negocios", "suscripcion_id", "TEXT DEFAULT ''"],
+  // Último aviso de fin de prueba que se mandó ("3" o "1" días antes), para no repetirlo.
+  ["negocios", "aviso_prueba", "TEXT DEFAULT ''"],
+  // Fecha (AAAA-MM-DD) del último recordatorio de pago que se le mandó al cliente.
+  ["documentos", "ultimo_recordatorio", "TEXT DEFAULT ''"],
 ];
 
 async function preparar(c: Client) {

@@ -11,6 +11,7 @@ import { clavesPush } from "@/lib/avisos";
 export const metadata: Metadata = { title: "Más" };
 
 const OPCIONES: { href: string; texto: string; detalle: string; icono: NombreIcono }[] = [
+  { href: "/numeros", texto: "Cuánto gané", detalle: "Lo que cobraste este mes y cómo te pagaron", icono: "subir" },
   { href: "/precios", texto: "Lista de precios", detalle: "Tus servicios y materiales, y cómo actualizarlos", icono: "precios" },
   { href: "/negocio", texto: "Mi negocio", detalle: "Tus datos, tu alias para cobrar y tu CUIT", icono: "negocio" },
   { href: "/suscripcion", texto: "Suscripción", detalle: "Tu prueba gratis, tu plan y cómo darte de baja", icono: "cobro" },
@@ -44,6 +45,10 @@ export default async function Mas() {
       <div className="tarjeta">
         <ActivarAvisos clavePublica={claves.publica} variante="completo" />
       </div>
+
+      <a href="/exportar" download className="btn btn-secundario mt-4 w-full">
+        <Icono n="descargar" /> Descargar mis datos en Excel
+      </a>
 
       <TituloSeccion>Apariencia</TituloSeccion>
       <div className="tarjeta">

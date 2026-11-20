@@ -2,11 +2,13 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { connection } from "next/server";
 import { TablaLineas } from "@/components/documentos";
+import { GrillaFotos } from "@/components/fotos";
 import { BotonAccion, BotonCopiar, BotonImprimir, BotonWhatsApp, Formulario } from "@/components/formulario";
 import { Icono } from "@/components/ui";
 import { clienteAvisaPago, clienteAvisaPagoForm, responderPresupuesto } from "@/lib/acciones";
 import { docPorToken, lineasDe, type Negocio } from "@/lib/datos";
 import { fila } from "@/lib/db";
+import { fotosDeTrabajo, trabajoDeDoc } from "@/lib/fotos";
 import { CONDICIONES_IVA, dinero, fechaCorta, hoyISO, linkWhatsApp, numeroDoc } from "@/lib/formato";
 
 /** Página que ve el cliente desde el link de WhatsApp. No necesita cuenta ni instalar nada. */
@@ -24,6 +26,8 @@ export default async function DocumentoPublico({ params }: { params: Promise<{ t
     lineasDe(doc.id),
   ]);
   if (!negocio) notFound();
+  const trabajoId = doc.tipo === "cobro" ? await trabajoDeDoc(doc) : null;
+  const fotos = trabajoId ? (await fotosDeTrabajo(doc.negocio_id, trabajoId)).filter((f) => f.etapa === "despues") : [];
 
   const hoy = hoyISO();
   const esPresupuesto = doc.tipo === "presupuesto";
@@ -95,6 +99,12 @@ export default async function DocumentoPublico({ params }: { params: Promise<{ t
         )}
 
         {doc.notas && <p className="mt-5 rounded-xl bg-slate-50 p-4 whitespace-pre-line">{doc.notas}</p>}
+        {fotos.length > 0 && (
+          <section className="mt-6">
+            <h2 className="mb-2 font-bold">Así quedó el trabajo</h2>
+            <GrillaFotos fotos={fotos} url={(id) => `/p/${doc.token}/fotos/${id}`} />
+          </section>
+        )}
         {negocio.nota_pie && <p className="mt-4 text-sm whitespace-pre-line text-suave">{negocio.nota_pie}</p>}
         <p className="mt-6 border-t border-slate-200 pt-4 text-center text-xs tracking-wide text-suave uppercase">
           Documento no válido como factura

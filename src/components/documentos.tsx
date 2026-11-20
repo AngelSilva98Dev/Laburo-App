@@ -32,6 +32,7 @@ import {
   hoyISO,
   linkWhatsApp,
   MEDIOS_PAGO,
+  mensajeCobro,
   numeroDoc,
   sumarDias,
 } from "@/lib/formato";
@@ -88,6 +89,7 @@ export async function ListaDocs({ tipo }: { tipo: Tipo }) {
     docs = [...docs].sort((a, b) => falta(a) - falta(b));
   }
   const deben = docs.filter((d) => d.moneda === "ARS").reduce((s, d) => s + Math.max(d.total - d.pagado, 0), 0);
+  const atrasados = docs.filter((d) => d.tipo === "cobro" && d.total - d.pagado > 0.005 && d.vence && d.vence < hoy).length;
 
   return (
     <>
@@ -104,6 +106,18 @@ export async function ListaDocs({ tipo }: { tipo: Tipo }) {
           <p className="text-white/80">Te deben en total</p>
           <p className="text-3xl font-bold tracking-tight">{dinero(deben)}</p>
         </div>
+      )}
+      {tipo === "cobro" && atrasados > 0 && (
+        <Link
+          href="/cobros/atrasados"
+          className="mb-4 flex items-center gap-3 rounded-2xl border-2 border-red-200 bg-red-50 p-4 font-semibold text-red-900"
+        >
+          <Icono n="whatsapp" />
+          <span className="flex-1">
+            {atrasados === 1 ? "Tenés 1 cobro atrasado" : `Tenés ${atrasados} cobros atrasados`}. Recordales por WhatsApp
+          </span>
+          <Icono n="derecha" className="size-5" />
+        </Link>
       )}
 
       {docs.length === 0 ? (
@@ -324,7 +338,7 @@ export async function DetalleDoc({ tipo, id }: { tipo: Tipo; id: string }) {
   const mensaje =
     tipo === "presupuesto"
       ? `Hola ${primerNombre}! Te paso el presupuesto de ${negocio.nombre} por "${doc.titulo}".\nTotal: ${dinero(doc.total, doc.moneda)}${doc.vence ? `\nVálido hasta el ${fechaCorta(doc.vence)}` : ""}\n\nLo podés ver y aceptar acá:\n${urlPublica}`
-      : `Hola ${primerNombre}! Te paso el detalle de ${negocio.nombre} por "${doc.titulo}".\n${doc.pagado > 0 ? "Falta pagar" : "Total"}: ${dinero(saldo, doc.moneda)}\n\nAcá están los datos para pagar:\n${urlPublica}`;
+      : mensajeCobro(doc, negocio.nombre, urlPublica, hoy);
   const wa = linkWhatsApp(doc.cliente_telefono, mensaje);
 
   // Siguiente paso del circuito: presupuesto aceptado → trabajo → cobro.

@@ -114,5 +114,30 @@ export async function cargarDatosDeEjemplo(negocioId: string) {
     ["Hora de mano de obra", 2, 30000],
   ], { trabajoId: tViejo });
 
+  // Trabajos ya cobrados en los últimos meses.
+  const medios = ["transferencia", "efectivo", "mercadopago", "transferencia", "efectivo"];
+  const historico: [number, number, string, number][] = [
+    [0, 8, "Destapación de cañería", 60000],
+    [2, 15, "Cambio de flexibles", 36000],
+    [3, 35, "Reparación de pérdida de gas", 95000],
+    [4, 41, "Destapación de cocina", 60000],
+    [0, 52, "Instalación de termotanque", 140000],
+    [1, 66, "Visita y diagnóstico", 25000],
+    [2, 74, "Cambio de canilla", 45000],
+    [3, 95, "Reparación de pérdida de gas", 95000],
+    [4, 103, "Destapación de cañería", 55000],
+    [1, 128, "Instalación de termotanque", 130000],
+    [2, 141, "Arreglo de mochila del inodoro", 38000],
+    [0, 160, "Destapación de cañería", 52000],
+  ];
+  historico.forEach(([cliente, dias, titulo, monto], i) => {
+    const fecha = sumarDias(hoy, -dias);
+    const c = doc("cobro", cliente, titulo, "borrador", fecha, sumarDias(fecha, 7), [[titulo, 1, monto]]);
+    s.push({
+      sql: "INSERT INTO pagos (id, negocio_id, doc_id, monto, medio, fecha) VALUES (?, ?, ?, ?, ?, ?)",
+      args: [nuevoId(), negocioId, c.id, monto, medios[i % medios.length], fecha],
+    });
+  });
+
   await lote(s);
 }
