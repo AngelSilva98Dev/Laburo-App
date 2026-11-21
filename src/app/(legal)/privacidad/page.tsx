@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { LEGAL_VIGENCIA, TITULAR } from "@/lib/legal";
+import { identificacion, LEGAL_VIGENCIA, TITULAR } from "@/lib/legal";
 
 export const metadata: Metadata = { title: "Política de privacidad" };
 
@@ -15,7 +15,7 @@ export default function Privacidad() {
 
       <h2>1. Quién es el responsable</h2>
       <p>
-        El responsable de los datos es {TITULAR.nombre}, CUIT {TITULAR.cuit}, con domicilio en {TITULAR.domicilio}. Para cualquier consulta sobre tus datos, escribinos a {TITULAR.email}.
+        {identificacion("El responsable de los datos es")} Para cualquier consulta sobre tus datos, escribinos a {TITULAR.email}.
       </p>
 
       <h2>2. Qué datos guardamos</h2>

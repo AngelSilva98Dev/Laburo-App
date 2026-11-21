@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { dinero } from "@/lib/formato";
-import { LEGAL_VIGENCIA, TITULAR } from "@/lib/legal";
+import { identificacion, LEGAL_VIGENCIA, TITULAR } from "@/lib/legal";
 import { DIAS_PRUEBA, PRECIO_MENSUAL } from "@/lib/suscripcion";
 
 export const metadata: Metadata = { title: "Términos y condiciones" };
@@ -18,7 +18,7 @@ export default function Terminos() {
 
       <h2>1. Quiénes somos</h2>
       <p>
-        Laburo es un servicio por internet para que trabajadores de oficios y servicios organicen sus presupuestos, su agenda y sus cobros. El titular del servicio es {TITULAR.nombre}, CUIT {TITULAR.cuit}, con domicilio en {TITULAR.domicilio}. Podés escribirnos a {TITULAR.email}.
+        Laburo es un servicio por internet para que trabajadores de oficios y servicios organicen sus presupuestos, su agenda y sus cobros. {identificacion("El titular del servicio es")} Podés escribirnos a {TITULAR.email}.
       </p>
 
       <h2>2. Aceptación</h2>
