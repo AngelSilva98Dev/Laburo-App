@@ -423,9 +423,12 @@ export async function cambiarEstadoPresupuesto(fd: FormData) {
   const { negocio } = await requerirSesion();
   const estado = texto(fd, "estado");
   if (!["borrador", "enviado", "aprobado", "rechazado"].includes(estado)) return;
-  await ejecutar("UPDATE documentos SET estado = ? WHERE id = ? AND negocio_id = ? AND tipo = 'presupuesto'", [
-    estado, texto(fd, "id"), negocio.id,
-  ]);
+  // Si deja de estar rechazado, el comentario del cliente ya no corresponde.
+  await ejecutar(
+    `UPDATE documentos SET estado = ?, motivo_rechazo = CASE WHEN ? = 'rechazado' THEN motivo_rechazo ELSE '' END
+     WHERE id = ? AND negocio_id = ? AND tipo = 'presupuesto'`,
+    [estado, estado, texto(fd, "id"), negocio.id],
+  );
   actualizar();
 }
 
@@ -443,9 +446,14 @@ export async function marcarEnviado(id: string) {
 export async function responderPresupuesto(fd: FormData) {
   const token = texto(fd, "token", 64);
   const respuesta = texto(fd, "respuesta") === "aprobado" ? "aprobado" : "rechazado";
+  // Al rechazar, el cliente puede elegir un motivo rápido y dejar un comentario (las dos cosas son opcionales).
+  const motivo =
+    respuesta === "rechazado"
+      ? [texto(fd, "motivo", 80), texto(fd, "comentario", 500)].filter(Boolean).join(". ")
+      : "";
   const r = await ejecutar(
-    "UPDATE documentos SET estado = ? WHERE token = ? AND tipo = 'presupuesto' AND estado IN ('borrador', 'enviado')",
-    [respuesta, token],
+    "UPDATE documentos SET estado = ?, motivo_rechazo = ? WHERE token = ? AND tipo = 'presupuesto' AND estado IN ('borrador', 'enviado')",
+    [respuesta, motivo, token],
   );
   if (r.rowsAffected > 0) {
     const d = await fila<{ id: string; negocio_id: string; titulo: string; total: number; moneda: string; cliente: string }>(
@@ -466,7 +474,9 @@ export async function responderPresupuesto(fd: FormData) {
           : {
               tipo: "rechazado",
               titulo: `${d.cliente} rechazó tu presupuesto`,
-              texto: `"${d.titulo}" por ${dinero(d.total, d.moneda)}. Podés escribirle para ver si se puede ajustar.`,
+              texto: motivo
+                ? `"${d.titulo}". Te dejó un comentario: “${motivo.length > 140 ? `${motivo.slice(0, 140)}…` : motivo}”`
+                : `"${d.titulo}" por ${dinero(d.total, d.moneda)}. Podés escribirle para ver si se puede ajustar.`,
               enlace: `/presupuestos/${d.id}`,
             },
       );

@@ -166,6 +166,8 @@ const COLUMNAS_NUEVAS: [tabla: string, columna: string, definicion: string][] = 
   ["negocios", "aviso_prueba", "TEXT DEFAULT ''"],
   // Fecha (AAAA-MM-DD) del último recordatorio de pago que se le mandó al cliente.
   ["documentos", "ultimo_recordatorio", "TEXT DEFAULT ''"],
+  // Por qué el cliente rechazó el presupuesto desde su link (el motivo que eligió y su comentario).
+  ["documentos", "motivo_rechazo", "TEXT DEFAULT ''"],
 ];
 
 async function preparar(c: Client) {

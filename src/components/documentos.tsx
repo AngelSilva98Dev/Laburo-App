@@ -370,6 +370,12 @@ export async function DetalleDoc({ tipo, id }: { tipo: Tipo; id: string }) {
           <Dato nombre="Fecha">{fechaCorta(doc.fecha)}</Dato>
           {doc.vence && <Dato nombre={tipo === "presupuesto" ? "Vale hasta" : "Vence"}>{fechaCorta(doc.vence)}</Dato>}
         </dl>
+        {tipo === "presupuesto" && doc.estado === "rechazado" && doc.motivo_rechazo && (
+          <div className="mt-4 rounded-xl border-2 border-red-200 bg-red-50 p-4 text-red-900">
+            <p className="font-semibold">Por qué lo rechazó {primerNombre}</p>
+            <p className="mt-1 whitespace-pre-line">“{doc.motivo_rechazo}”</p>
+          </div>
+        )}
         {tipo === "cobro" && (
           <div className={`mt-4 rounded-xl p-4 ${cobrado ? "bg-emerald-50 text-emerald-900" : "bg-marca-50 text-marca-900"}`}>
             <p className="font-medium">{cobrado ? "Ya cobraste todo" : doc.pagado > 0 ? "Falta cobrar" : "Para cobrar"}</p>

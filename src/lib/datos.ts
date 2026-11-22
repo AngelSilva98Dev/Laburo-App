@@ -67,6 +67,7 @@ export type Doc = {
   moneda: string;
   token: string;
   ultimo_recordatorio: string;
+  motivo_rechazo: string;
   cliente_nombre: string;
   cliente_telefono: string;
   pagado: number;

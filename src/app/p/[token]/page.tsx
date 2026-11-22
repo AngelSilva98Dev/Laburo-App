@@ -13,6 +13,9 @@ import { CONDICIONES_IVA, dinero, fechaCorta, hoyISO, linkWhatsApp, numeroDoc } 
 
 /** Página que ve el cliente desde el link de WhatsApp. No necesita cuenta ni instalar nada. */
 
+/** Motivos rápidos para rechazar, para que el cliente no tenga que escribir. */
+const MOTIVOS_RECHAZO = ["Me pareció caro", "Ya lo resolví con otro", "Lo dejo para más adelante", "No era lo que buscaba"];
+
 export const metadata: Metadata = { title: "Tu presupuesto", robots: { index: false, follow: false } };
 
 export default async function DocumentoPublico({ params }: { params: Promise<{ token: string }> }) {
@@ -52,7 +55,10 @@ export default async function DocumentoPublico({ params }: { params: Promise<{ t
         <p className="aviso-ok no-imprimir mb-4 flex items-center gap-2 text-lg"><Icono n="check" /> ¡Listo! Aceptaste este presupuesto. {negocio.nombre} se va a comunicar con vos para coordinar.</p>
       )}
       {esPresupuesto && doc.estado === "rechazado" && (
-        <p className="aviso-error no-imprimir mb-4">Este presupuesto fue rechazado. Si cambiaste de idea, escribile a {negocio.nombre}.</p>
+        <div className="aviso-error no-imprimir mb-4">
+          <p>Este presupuesto fue rechazado. Si cambiaste de idea, escribile a {negocio.nombre}.</p>
+          {doc.motivo_rechazo && <p className="mt-2 text-sm whitespace-pre-line">Tu comentario: “{doc.motivo_rechazo}”</p>}
+        </div>
       )}
       {esPresupuesto && vencido && doc.estado !== "aprobado" && doc.estado !== "rechazado" && (
         <p className="no-imprimir mb-4 rounded-xl border-2 border-amber-200 bg-amber-50 px-4 py-3 font-medium text-amber-950">
@@ -160,13 +166,36 @@ export default async function DocumentoPublico({ params }: { params: Promise<{ t
         <BotonImprimir><Icono n="imprimir" /> Imprimir o guardar como PDF</BotonImprimir>
 
         {puedeResponder && (
-          <form action={responderPresupuesto} className="pt-2 text-center">
-            <input type="hidden" name="token" value={doc.token} />
-            <input type="hidden" name="respuesta" value="rechazado" />
-            <BotonAccion className="min-h-11 cursor-pointer px-3 font-semibold text-suave underline underline-offset-2" confirmar="¿Seguro que no querés este presupuesto?">
+          // Al tocar "No me interesa" se abre un recuadro para contar por qué (opcional). Funciona sin JavaScript.
+          <details className="group pt-2">
+            <summary className="mx-auto flex min-h-11 w-fit cursor-pointer list-none items-center px-3 font-semibold text-suave underline underline-offset-2 group-open:hidden [&::-webkit-details-marker]:hidden">
               No me interesa este presupuesto
-            </BotonAccion>
-          </form>
+            </summary>
+            <form action={responderPresupuesto} className="tarjeta mt-2 space-y-4 text-left">
+              <input type="hidden" name="token" value={doc.token} />
+              <input type="hidden" name="respuesta" value="rechazado" />
+              <fieldset>
+                <legend className="text-lg font-bold">¿Nos contás por qué?</legend>
+                <p className="ayuda mb-3">Es opcional, pero le sirve a {negocio.nombre} para mejorar.</p>
+                <div className="flex flex-wrap gap-2">
+                  {MOTIVOS_RECHAZO.map((m) => (
+                    <label
+                      key={m}
+                      className="flex min-h-11 cursor-pointer items-center rounded-full border-2 border-slate-200 px-4 font-medium has-[:checked]:border-marca-600 has-[:checked]:bg-marca-50 has-[:checked]:text-marca-900 has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-marca-500"
+                    >
+                      <input type="radio" name="motivo" value={m} className="sr-only" />
+                      {m}
+                    </label>
+                  ))}
+                </div>
+              </fieldset>
+              <div>
+                <label htmlFor="comentario" className="etiqueta">Comentario (opcional)</label>
+                <textarea id="comentario" name="comentario" rows={3} maxLength={500} className="campo" placeholder="Escribí lo que quieras decirle" />
+              </div>
+              <BotonAccion className="btn btn-secundario w-full">Enviar y rechazar el presupuesto</BotonAccion>
+            </form>
+          </details>
         )}
       </div>
 
