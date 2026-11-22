@@ -16,10 +16,8 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
-    { media: "(prefers-color-scheme: dark)", color: "#0e1320" },
-  ],
+  // El color de la barra del celular lo pone el script del tema (src/lib/tema.ts),
+  // para que coincida con el tema elegido en la app y no solo con el del celular.
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
